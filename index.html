@@ -3880,11 +3880,40 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         rec=document.getElementById('rec-entry');
     function setStep(n){bars.forEach(function(b){b.classList.toggle('on', +b.getAttribute('data-s')<=n);});}
     function toRec(pos){if(rec)rec.scrollIntoView({behavior:'smooth',block:pos||'start'});}
+    // 応募をバックエンド(採用管理)へ登録してからSTEP2(日程登録)へ進む。失敗時は進めず案内(データ喪失防止)。
+    var EGAS='https://script.google.com/macros/s/AKfycbxLs1eXm39MHM0lSioBf9ghVFL8p8fIhIdYJpBBweBTCLOFDqWclPhoF66c0FgfrbHg/exec';
+    var efErr=document.createElement('p');
+    efErr.style.cssText='display:none;color:#b0453e;background:#fdf4f3;border:1px solid #e6c3c3;border-radius:10px;padding:10px 14px;font-size:12.5px;margin:12px 0 0;line-height:1.7;text-align:left';
+    var efSub=entryForm.querySelector('.ef-submit'); if(efSub)efSub.appendChild(efErr);
+    var entrySubmitted=false;
     entryForm.addEventListener('submit',function(e){e.preventDefault();
       var nm=entryForm.querySelector('[name=name]'), em=entryForm.querySelector('[name=email]'), mo=entryForm.querySelector('[name=motive]'), ok=true, first=null;
       [[nm,!!nm.value.trim()],[em,/.+@.+\..+/.test(em.value)],[mo,!!mo.value.trim()]].forEach(function(p){if(!p[1]){p[0].classList.add('err');ok=false;if(!first)first=p[0];}else p[0].classList.remove('err');});
       if(!ok){if(first)first.focus();return;}
-      entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start');   // 自動でリンクは開かない(Step2のボタンから手動)
+      if(entrySubmitted){entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start'); return;}   // 戻る→再送で二重登録しない
+      var v=function(n){var f=entryForm.querySelector('[name='+n+']');return f?String(f.value||'').trim():''};
+      var posBtn=posChips&&posChips.querySelector('.ef-chip.on');
+      var extra=[];
+      if(v('questions'))extra.push(v('questions'));
+      if(v('activity'))extra.push('【現在の活動】'+v('activity'));
+      if(v('tel'))extra.push('【電話】'+v('tel'));
+      if(v('city'))extra.push('【市区町村】'+v('city'));
+      var btn=entryForm.querySelector('.ef-submit .pill'), bt=btn.innerHTML;
+      btn.disabled=true; btn.textContent='送信しています…'; efErr.style.display='none';
+      fetch(EGAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'createRecruitApplication',payload:{
+        name:nm.value.trim(), name_kana:v('kana'), email:em.value.trim(), affiliation:v('affil'),
+        residence_prefecture:v('pref'), desired_department_ids:posBtn?[posBtn.getAttribute('data-pos')]:[],
+        desired_department_reason:mo.value.trim(), pre_interview_questions:extra.join('\n')
+      }})}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(j){
+        if(!j||!j.ok||!j.data||j.data.ok===false)throw new Error((j&&(j.error||(j.data&&j.data.error)))||'送信に失敗しました');
+        entrySubmitted=true;
+        btn.disabled=false; btn.innerHTML=bt;
+        entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start');   // 自動でリンクは開かない(Step2のボタンから手動)
+      }).catch(function(ex){
+        btn.disabled=false; btn.innerHTML=bt;
+        efErr.textContent='送信できませんでした（'+String(ex&&ex.message||ex)+'）。通信環境をご確認のうえ、もう一度お試しください。';
+        efErr.style.display='block';
+      });
     });
     var back=document.getElementById('entryBack');
     if(back)back.addEventListener('click',function(){step2.hidden=true; entryForm.hidden=false; setStep(1); toRec('start');});
