@@ -30,6 +30,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+JP:wght@100;200;300;400&family=Zen+Old+Mincho:wght@400;500;600;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..0&display=swap" rel="stylesheet">
 <style>
 .srh1{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+body{line-break:strict}
+p,h1,h2,h3,blockquote,.vb{text-wrap:pretty}
+.pill{appearance:none;-webkit-appearance:none}
+button.pill{border:none;font-family:inherit;cursor:pointer}
 :root{
   --ink:#1a1c22; --ink2:#5a6272; --ink3:#8b96a6;
   --blue:#1E50A2; --azure:#2E6BE6; --blue-deep:#12356f;
@@ -49,6 +53,7 @@ svg{display:block}
 .msym{font-family:'Material Symbols Rounded';font-weight:400;line-height:1;font-style:normal;vertical-align:middle}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 40px}
 @media(max-width:640px){.wrap{padding:0 26px}}
+@media(max-width:760px){.footcol a{display:inline-block;padding:9px 0}.mainnav a{padding:14px 10px}}
 
 /* progress + back to top */
 .progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--blue);z-index:200;transition:width .1s linear}
@@ -387,7 +392,7 @@ body.ap-lock{overflow:hidden}
 html{overflow-x:clip}
 /* (幕間) モバイルはインタールード=全画面の扉絵(写真の中身が左→右にパン) */
 @media(max-width:760px){div.interlude,div.interlude.il-sm{height:100vh;height:100svh;min-height:620px}.interlude .il-ph{animation-duration:13s}.interlude.il-sm .il-ph{animation-duration:11s}
-.interlude .il-t{font-size:clamp(18px,5.4vw,23px);letter-spacing:.1em;white-space:nowrap}}
+}
 .il-mob{display:none}
 @media(max-width:760px){.il-mob{display:block}}
 /* (AP) オーバーレイページの入場モーション(開くたび再生) */
@@ -463,15 +468,16 @@ html{overflow-x:clip}
 .li{display:flex;align-items:center;gap:22px;padding:24px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:padding .2s}
 .li:last-child{border-bottom:0}
 .li:hover{padding-left:8px}
-@media(max-width:600px){
-  .li{flex-wrap:wrap;gap:8px 12px;position:relative;padding-right:30px}
-  .li .tt{flex:1 1 100%;order:3;line-height:1.8}
-  .li .go{position:absolute;right:0;top:24px}
-}
+
 .li .date{font-family:var(--latin);font-size:13.5px;color:var(--ink2);flex:none;width:96px}
 .li .tag{font-size:11px;font-weight:700;color:var(--blue);background:rgba(30,80,162,.09);padding:3px 10px;border-radius:6px;flex:none}
 .li .tt{flex:1;min-width:0;font-size:15px;font-weight:500}
 .li .go{width:30px;height:30px;border-radius:50%;background:rgba(30,80,162,.08);color:var(--blue);display:grid;place-items:center;flex:none;transition:transform .2s,background .2s,color .2s}
+@media(max-width:600px){
+  .li{flex-wrap:wrap;gap:8px 12px;position:relative;padding-right:34px}
+  .li .tt{flex:1 1 100%;order:3;line-height:1.85}
+  .li .go{position:absolute;right:0;top:24px}
+}
 .li:hover .go{background:var(--blue);color:#fff}
 .li:hover .go{transform:translateX(4px)}
 
@@ -624,6 +630,7 @@ footer{background:#0B1B3A;color:rgba(255,255,255,.6);padding:60px 0 34px}
 .ap-tokyo .ap-circle-ph{background-image:url("louie-martinez-IocJwyqRv3M-unsplash.jpg")!important;background-position:34% 38%}
 .interlude.il-m1 .il-ph{background-image:url("coco-event.jpg")!important;background-position:center 55%}
 .interlude.il-m2 .il-ph{background-image:url("syuhei-inoue-kaoHI0iHJPM-unsplash.jpg")!important;background-position:center 30%}
+#society .photo{background-image:url("jeremy-santana-7_puF4jioPo-unsplash.jpg")!important;background-position:74% 30%}
 /* (PhotoReveal) スクロール入場で写真の中をカメラが動き、主役がフレームインする。退場で元の構図へ帰る */
 #about .photo,.nb-ph,.ap-circle-ph{transition:background-position 2.6s cubic-bezier(.22,.75,.25,1),background-size 2.6s cubic-bezier(.22,.75,.25,1)}
 /* about: rest=橋だけ(天守は上に見切れ) → on=ティルトアップして天守+橋 */
@@ -724,7 +731,7 @@ footer{background:#0B1B3A;color:rgba(255,255,255,.6);padding:60px 0 34px}
   transition:background .45s ease,border-color .45s ease,padding .45s cubic-bezier(.3,.8,.3,1),max-width .45s cubic-bezier(.3,.8,.3,1),box-shadow .45s ease,opacity .35s ease}
 .rg-callout.ts{--ac:#9db4ff}
 .rg-callout.tc{--ac:#8fe3c0}
-.rg-callout .rc-k{display:block;font-family:var(--latin);font-weight:600;font-size:.72em;letter-spacing:.34em;color:var(--ac);margin-bottom:.32em;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+.rg-callout .rc-k{display:block;font-family:var(--latin);font-weight:600;font-size:max(.72em,9.5px);letter-spacing:.3em;color:var(--ac);margin-bottom:.32em;text-shadow:0 2px 8px rgba(0,0,0,.85)}
 .rg-callout b{display:block;font-family:var(--serif);font-weight:700;font-size:1.28em;letter-spacing:.1em;line-height:1.35;text-shadow:0 2px 14px rgba(0,0,0,.85),0 0 30px rgba(0,0,0,.5)}
 .rg-callout .rc-u{display:block;height:1px;margin-top:.42em;background:linear-gradient(90deg,var(--ac),rgba(255,255,255,0));opacity:.85;transition:opacity .3s}
 .rg-callout.hz:not(.exp){padding:.75em 1.2em}
@@ -827,20 +834,42 @@ body.se-mapmob .about-page.open .ap-close{position:absolute}
 body.se-mapmob .rg-mapfit{max-width:100%;height:auto}
 body.se-mapmob .rg-map{height:auto}
 body.se-mapmob .rg-callout{max-width:9.5em}
+body.se-posmode .hero,body.se-posmode .interlude,body.se-posmode .plr-hero,body.se-posmode .pt-hero{cursor:move}
 body.se-textmode [contenteditable]{outline:2px solid #2e6be6;outline-offset:2px;border-radius:4px}
 body.se-textmode h1:hover,body.se-textmode h2:hover,body.se-textmode h3:hover,body.se-textmode p:hover,body.se-textmode span:hover,body.se-textmode b:hover,body.se-textmode small:hover,body.se-textmode a:hover,body.se-textmode li:hover,body.se-textmode em:hover{outline:1.5px dashed rgba(90,140,255,.75);outline-offset:2px;cursor:text}
 body.editing .rg-dot,body.editing .rg-callout{cursor:grab}
 body.editing .rg-dot:active,body.editing .rg-callout:active{cursor:grabbing}
 body.editing .rg-mapfit.arm-add{cursor:crosshair;outline:2px dashed rgba(255,255,255,.5);outline-offset:4px}
-#siteEditor{position:fixed;top:0;right:0;bottom:0;width:min(400px,92vw);z-index:500;background:#0e1526;color:#eef2ff;border-left:1px solid rgba(255,255,255,.14);box-shadow:-20px 0 60px rgba(0,0,0,.45);display:flex;flex-direction:column;font-family:var(--gothic);transition:transform .3s ease}
-#siteEditor.min{transform:translateX(calc(100% - 44px))}
+#siteEditor{position:fixed;top:0;right:0;bottom:0;width:min(400px,92vw);z-index:500;background:linear-gradient(178deg,#111a30,#0b1222);color:#eef2ff;border-left:1px solid rgba(255,255,255,.14);box-shadow:-20px 0 60px rgba(0,0,0,.45);display:flex;flex-direction:column;font-family:var(--gothic);transition:transform .3s ease}
+.se-logo{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#6E86E0,#2e6be6);box-shadow:0 0 10px rgba(110,134,224,.8)}
+.se-modes{display:flex;align-items:center;gap:10px;padding:10px 14px 4px}
+.se-modes-l,.se-nav-l{font-size:10px;letter-spacing:.16em;color:#8fa3d9;flex:none}
+.se-modebtns{display:flex;gap:6px;flex:1}
+.se-modebtns button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#cdd7f5;border-radius:10px;padding:7px 2px 6px;font-size:10px;font-weight:700;cursor:pointer;transition:background .2s,border-color .2s}
+.se-modebtns button i{font-style:normal;font-size:15px}
+.se-modebtns button:hover{border-color:rgba(255,255,255,.35)}
+.se-modebtns button.on{background:#2e6be6;border-color:#2e6be6;color:#fff}
+.se-nav{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.12)}
+.se-navsel{flex:1;background:#182138;border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:10px;padding:9px 10px;font-size:12.5px;font-family:inherit;font-weight:700}
+.se-sec{border:1px solid rgba(255,255,255,.1);border-radius:12px;margin:14px 0;background:rgba(255,255,255,.025);overflow:hidden}
+.se-sec-h{display:flex;align-items:center;gap:8px;width:100%;background:rgba(255,255,255,.05);border:none;color:#dfe7ff;padding:10px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left}
+.se-sec-h em{font-style:normal;font-size:10px;color:#8fa3d9;margin-left:auto}
+.se-sec-h i{font-style:normal;font-size:11px;color:#8fa3d9;transition:transform .25s}
+.se-sec.closed .se-sec-h i{transform:rotate(-90deg)}
+.se-sec-b{padding:10px 12px 12px}
+.se-sec.closed .se-sec-b{display:none}
+#siteEditor.min{transform:translateX(calc(100% - 44px));cursor:pointer}
+#siteEditor.min::before{content:"◀ 編集をひらく";position:absolute;left:12px;top:18px;writing-mode:vertical-rl;font-size:12px;font-weight:700;letter-spacing:.2em;color:#cdd7f5;pointer-events:none}
+#siteEditor.min>*{pointer-events:none}
 .se-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12)}
 .se-head b{font-size:13px;letter-spacing:.08em}
 .se-min{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:12px}
-.se-tabs{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.12)}
+.se-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.12)}
+.se-tabs[hidden]{display:none}
+.se-tabs button{min-width:56px;flex:1 1 auto}
 .se-tabs button{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#cdd7f5;border-radius:8px;padding:8px 4px;font-size:12px;font-weight:700;cursor:pointer}
 .se-tabs button.on{background:#2e6be6;border-color:#2e6be6;color:#fff}
-.se-body{flex:1;overflow-y:auto;padding:14px;font-size:12px}
+.se-body{flex:1;overflow-y:auto;padding:6px 14px 14px;font-size:12px}
 .se-body label{display:block;font-size:10.5px;letter-spacing:.12em;color:#8fa3d9;margin:14px 0 4px}
 .se-body input[type=text],.se-body textarea,.se-body select{width:100%;box-sizing:border-box;background:#182138;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit}
 .se-body textarea{min-height:64px;line-height:1.7;resize:vertical}
@@ -852,10 +881,10 @@ body.editing .rg-mapfit.arm-add{cursor:crosshair;outline:2px dashed rgba(255,255
 .se-add{width:100%;background:rgba(46,107,230,.18);border:1px dashed rgba(120,155,240,.6);color:#b9caf7;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
 .se-add.on{background:#2e6be6;color:#fff;border-style:solid}
 .se-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.se-foot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.12)}
+.se-foot{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
 .se-foot button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:9px 4px;font-size:12px;font-weight:700;cursor:pointer}
 .se-foot .se-save{background:#2e6be6;border-color:#2e6be6}
-.se-status{padding:6px 14px;font-size:10.5px;color:#7fd6a7;min-height:22px}
+.se-status{padding:7px 14px;font-size:10.5px;color:#7fd6a7;min-height:24px;border-top:1px solid rgba(255,255,255,.08)}
 .se-note{font-size:10.5px;color:#8fa3d9;line-height:1.7;margin-top:6px}
 .se-pin-hd{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
 .se-pin-hd label{margin:0}
@@ -890,6 +919,9 @@ body.editing .rg-mapfit.arm-add{cursor:crosshair;outline:2px dashed rgba(255,255
 .dstat b{display:block;font-family:var(--latin);font-weight:700;font-size:clamp(30px,3.8vw,44px);letter-spacing:.01em;line-height:1.05}
 .dstat span{display:block;font-family:var(--latin);font-weight:600;font-size:9.5px;letter-spacing:.28em;color:rgba(255,255,255,.62);margin-top:7px}
 .rg-h2.dsec{margin-top:46px}
+.dcta{margin-top:46px;padding:26px 0 4px;border-top:1px solid rgba(255,255,255,.18);display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.dcta p{margin:0;font-family:var(--serif);font-weight:700;font-size:clamp(16px,2vw,20px);letter-spacing:.08em}
+.dcta b{font-family:var(--latin);color:#9db4ff}
 /* スタイルA: 背景写真=画面全体 */
 .dbg-ph{position:fixed;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .7s ease;pointer-events:none}
 .dbg-scrim{position:fixed;inset:0;background:linear-gradient(180deg,rgba(8,14,32,.4),rgba(8,14,32,.56) 46%,rgba(7,13,30,.86));opacity:0;transition:opacity .7s ease;pointer-events:none}
@@ -1103,6 +1135,7 @@ body.nav-open{overflow:hidden}
 .interlude .il-line{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:0 24px}
 .interlude .il-kick{font-family:var(--latin);font-weight:600;font-size:11.5px;letter-spacing:.4em;color:rgba(255,255,255,.66)}
 .interlude .il-t{font-family:var(--serif);font-weight:700;font-size:clamp(26px,4.4vw,48px);letter-spacing:.12em;color:#fff;text-shadow:0 8px 34px rgba(11,27,58,.6)}
+@media(max-width:760px){.interlude .il-t{font-size:clamp(17px,5.1vw,22px);letter-spacing:.09em;white-space:nowrap}}
 /* 数字カウントアップ(rAF)+浮かぶレビュー */
 .plus,.stat .plus{opacity:1}
 .stat .plus,.stat .num small{opacity:0;transition:opacity .5s ease .9s}
@@ -1149,7 +1182,7 @@ body.nav-open{overflow:hidden}
 .nbs .num small{font-size:.38em;margin-left:5px;font-weight:700}
 .nbs .plus{font-size:.3em;color:#9FC0F0;margin-left:9px;font-weight:700;letter-spacing:.02em}
 .nbs .lb{display:block;margin-top:11px;font-size:13px;font-weight:700;letter-spacing:.05em;color:rgba(255,255,255,.9)}
-.nbs .lb em{display:block;font-style:normal;font-size:11px;font-weight:500;color:rgba(255,255,255,.58);margin-top:4px;letter-spacing:.03em}
+.nbs .lb em{display:block;font-style:normal;font-size:12px;font-weight:500;color:rgba(255,255,255,.8);margin-top:4px;letter-spacing:.03em;text-shadow:0 1px 8px rgba(11,27,58,.65)}
 .nb-fy{position:absolute;right:2px;bottom:-34px;font-family:var(--latin);font-weight:500;font-size:11.5px;letter-spacing:.1em;color:rgba(255,255,255,.6)}
 .numband .bub{border-color:rgba(255,255,255,.15);background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.26),rgba(255,255,255,.03) 60%,transparent 70%)}
 /* (S3) 制度: 2列定義リスト(実文つき) */
@@ -2023,12 +2056,12 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
     <div class="foot">
       <div>
         <a class="brand" href="#top" style="color:#fff"><span class="mark"><b>a</b></span>connec+a</a>
-        <p class="desc">在留外国人と地域社会をつなぐNPO。文化が受け継がれながら進化していく、共生社会の実現を目指しています。</p>
+        <p class="desc">在留外国人と地域社会をつなぐ学生団体。文化が受け継がれながら進化していく、共生社会の実現を目指しています。</p>
       </div>
       <div class="footcols">
         <div class="footcol"><h5>ABOUT</h5><a href="#about">わたしたち</a><a href="#how">課題と解法</a></div>
         <div class="footcol"><h5>JOIN</h5><a href="#news">お知らせ</a><a href="#recruit">採用情報</a><a href="index.html#apply">エントリー</a></div>
-        <div class="footcol"><h5>CONTACT</h5><a href="index.html">運営コンソール</a><a href="#top">ページ上部へ</a></div>
+        <div class="footcol"><h5>CONTACT</h5><a href="#recruit-page" data-overlay="recruit-page">採用情報・エントリー</a><a href="#news-page" data-overlay="news-page">説明会・お知らせ</a></div>
       </div>
     </div>
     <div class="copy"><span>©2026 学生団体 connec+a(コネクタ)</span><span>代表 菊地 隆輝</span></div>
@@ -2427,11 +2460,11 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       ]
     },
     swarm:{circles:{
-      if:{photo:'',pos:'20% 35%',zoom:'150%',x:null,y:null,w:null},
-      om:{photo:'',pos:'70% 20%',zoom:'220%',x:null,y:null,w:null},
-      cc:{photo:'',pos:'45% 65%',zoom:'260%',x:null,y:null,w:null},
-      hub:{photo:'',pos:'82% 45%',zoom:'180%',x:null,y:null,w:null},
-      cclab:{photo:'',pos:'30% 80%',zoom:'300%',x:null,y:null,w:null}
+      if:{photo:'coco-event.jpg',pos:'center 50%',zoom:'150%',x:null,y:null,w:null},
+      om:{photo:'shinjuku-o-guard_large.jpg',pos:'center 35%',zoom:'170%',x:null,y:null,w:null},
+      cc:{photo:'yu-kato-824OwkP7sgk-unsplash.jpg',pos:'center 75%',zoom:'200%',x:null,y:null,w:null},
+      hub:{photo:'nishi-shinjuku-intersection-2_large.jpg',pos:'center 30%',zoom:'180%',x:null,y:null,w:null},
+      cclab:{photo:'syuhei-inoue-kaoHI0iHJPM-unsplash.jpg',pos:'center 55%',zoom:'160%',x:null,y:null,w:null}
     }},
     photos:{
       hero:['',''],
@@ -2439,10 +2472,27 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       about:'', nb:''
     },
     textOverrides:{},
+    textOffsets:{},
+    nb:{stats:[
+      [414,'plus','+116','イベント総参加者数',''],
+      [92,'unit','%','参加者満足度','213件のアンケートより'],
+      [13,'plus','+5','累計イベント開催数',''],
+      [33,'unit','ヵ国','参加者の国籍','']
+    ]},
+    about2:{
+      facts:[['組織名','学生団体 connec+a（コネクタ）'],['設立','2025年11月'],['メンバー数','49名（高校生26・大学生20・社会人3）'],['役員','代表 菊地 隆輝 ／ 副代表 宮崎 こはる'],['事業','在留外国人支援事業'],['関連団体','特定非営利活動法人 Curiosity'],['活動拠点','東京・大阪・オンライン'],['資金調達','クラウドファンディングにて51万円を実施']],
+      awards:[['大賞','2022–23年度 高校生世代チャレンジプログラム（NPO法人 Curiosity 主催・東京都教育委員会後援）'],['入賞','2023年度 チャレンジアシストプログラム — 歴代最年少代表として入賞（18歳3ヶ月）']]
+    },
+    voices:[
+      ['日本人に話すきっかけがなくて、イベントは写真だけで終わりがち。','日本語学校に通う留学生\n「交流」の壁'],
+      ['奨学金、保険、住居…情報がバラバラで、期限も見落としがち。','働きながら暮らす在留外国人\n「情報」の壁'],
+      ['困ったとき、どこに相談すればいいか分からない。','来日3年目の生活者\n「環境」の壁']
+    ],
+    disc:{cards:[['ミッション','coco-event.jpg','center 45%'],['活動レポート','su-san-lee-E_eWwM29wfU-unsplash.jpg','16% 30%'],['connec+a MAP','louie-martinez-IocJwyqRv3M-unsplash.jpg','34% 38%'],['メンバーの声','steven-he-Y5JbvpVX1cw-unsplash.jpg','center 58%'],['めざす社会','yu-kato-824OwkP7sgk-unsplash.jpg','center 80%']]},
     how:{no:'CHAPTER 02',t:'解法',eyebrow:'わたしたちの解法',head:'場を編み、\n言葉を整え、\n仕組みで結ぶ。',walls:['交流','情報','環境']},
     moments:{
-      a:[['IF TOUR — DAY 1','','18% 40%','','w1'],['CONNEC+A TALK','','66% 24%','190%','w2'],['YOUは何しにOOへ','','center 60%','','w3'],['CO-LAB','','35% 30%','160%','w2'],['ORDERMADE','','82% 55%','150%','w1'],['まちの食卓','','50% 12%','210%','w2']],
-      b:[['WORKSHOP','','28% 70%','180%','w2'],['KAMIYACHO','','60% 35%','','w1'],['COMMUNITY','','44% 20%','230%','w2'],['INTERNATIONAL FRIENDSHIP TOUR','','center 45%','130%','w3'],['OM CULTURE','','75% 60%','170%','w2'],['TOUR OSAKA','','10% 25%','140%','w1']]
+      a:[['IF TOUR — DAY 1','coco-event.jpg','20% 45%','','w1'],['CONNEC+A TALK','coco-event.jpg','75% 30%','170%','w2'],['INTERNATIONAL FRIENDSHIP TOUR','coco-event.jpg','center 60%','140%','w3'],['CO-CREATION LAB','nishi-shinjuku-intersection-2_large.jpg','35% 30%','160%','w2'],['ORDERMADE','shinjuku-o-guard_large.jpg','center 40%','150%','w1'],['まちの食卓','yu-kato-824OwkP7sgk-unsplash.jpg','center 78%','180%','w2']],
+      b:[['WORKSHOP','coco-event.jpg','50% 70%','200%','w2'],['KAMIYACHO','louie-martinez-IocJwyqRv3M-unsplash.jpg','30% 45%','170%','w1'],['COMMUNITY','steven-he-Y5JbvpVX1cw-unsplash.jpg','center 55%','160%','w2'],['TOUR TOKYO','pichai-sodsai-E_JLhd4yIKI-unsplash.jpg','25% 80%','150%','w3'],['OM CULTURE','syuhei-inoue-kaoHI0iHJPM-unsplash.jpg','center 55%','','w2'],['TOUR OSAKA','jeremy-santana-7_puF4jioPo-unsplash.jpg','center 60%','140%','w1']]
     },
     pillars:{
       koryu:{hd:'安心して一歩を踏み出せる接点へ。まずは小さく出会える場所を。',dial:'',dialPos:'',k:'場を編む',name:'出会いの場',lead:'出会いは、設計できる。安心して一歩を踏み出せる接点を、まちの中にいくつも。まずは小さく出会える場所から、続く関係が始まります。',
@@ -2479,8 +2529,13 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         if(st.pillars)Object.keys(st.pillars).forEach(function(k){c.pillars[k]=st.pillars[k];});
         if(st.moments)c.moments=st.moments;
         if(st.how)c.how=st.how;
+        if(st.nb)c.nb=st.nb;
+        if(st.about2)c.about2=st.about2;
+        if(st.voices)c.voices=st.voices;
+        if(st.disc)c.disc=st.disc;
         if(st.swarm)c.swarm=st.swarm;
         if(st.textOverrides)c.textOverrides=st.textOverrides;
+        if(st.textOffsets)c.textOffsets=st.textOffsets;
         if(st.photos)c.photos=st.photos;
       }
     delete c.depts.jigyo; // 旧「交流推進事業」一括りはIF/OM/CCへ分割済み
@@ -2499,6 +2554,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   function showPartner(id){
     var p=(CONTENT.partners||{})[id];var pg=document.getElementById('partner-page');
     if(!p||!pg)return;
+    window.__curPartner=id;
     var host=pg.querySelector('.pt-host');
     var paras=String(p.body||'').split(/\n\s*\n/).filter(function(x){return x.trim();}).map(function(x){return '<p>'+escH(x).replace(/\n/g,'<br>')+'</p>';}).join('');
     host.innerHTML=
@@ -2620,6 +2676,8 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       }).join('')+'</div>';
     }
     if(dp.flow&&dp.flow.length)h+='<div class="rg-flow">'+dp.flow.map(function(x,i){return (i?'<span class="ar">→</span>':'')+'<span>'+escH(x)+'</span>';}).join('')+'</div>';
+    // 締めのCTA(薄い部署でも誌面が目的で終わる)
+    h+='<div class="dcta"><p>この部署で、あなたの<b>＋a</b>を。</p><a class="pill sm" href="#recruit-page" data-overlay="recruit-page">仲間になる<span class="msym">arrow_forward</span></a></div>';
     // 部署切り替えナビ(前/次)
     var ks=Object.keys(CONTENT.depts);var idx=ks.indexOf(key);
     if(ks.length>1){
@@ -2645,6 +2703,8 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     body.querySelectorAll('.dnav-b').forEach(function(b){
       b.addEventListener('click',function(){showDept(b.getAttribute('data-d'));});
     });
+    var dctaA=body.querySelector('.dcta a');
+    if(dctaA)dctaA.addEventListener('click',function(e){e.preventDefault();ovOpen('recruit-page');});
     if(window.__editSetDept)window.__editSetDept(key);
     pg.querySelector('.rg-list-view').hidden=true;
     pg.querySelector('.rg-detail-view').hidden=false;
@@ -2788,7 +2848,23 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   function applyTextOverrides(){
     var ov=CONTENT.textOverrides||{};
     Object.keys(ov).forEach(function(path){
-      try{var el=document.querySelector(path);if(el&&!el.closest('#siteEditor'))el.textContent=ov[path];}catch(_e){}
+      try{
+        var el=document.querySelector(path);
+        if(el&&!el.closest('#siteEditor')){
+          el.textContent=ov[path];
+          if(/\n/.test(ov[path]))el.style.whiteSpace='pre-line'; // 改行を保持
+        }
+      }catch(_e){}
+    });
+    var of=CONTENT.textOffsets||{};
+    Object.keys(of).forEach(function(path){
+      try{
+        var el=document.querySelector(path);
+        if(el&&!el.closest('#siteEditor')){
+          el.style.position='relative';
+          el.style.left=of[path][0]+'px';el.style.top=of[path][1]+'px';
+        }
+      }catch(_e){}
     });
   }
   function renderPhotos(){
@@ -2806,7 +2882,52 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     if(P.about)setImp(document.querySelector('#about .photo'),P.about,null);
     if(P.nb)setImp(document.querySelector('.nb-ph'),P.nb,null);
   }
-  function renderSiteContent(){renderRegion('kanto');renderRegion('kansai');renderDepts();renderPillars();renderMoments();renderHow();renderSwarm();renderPhotos();applyTextOverrides();}
+  function renderNb(){
+    var grid=document.querySelector('.nb-grid');var st=CONTENT.nb&&CONTENT.nb.stats;
+    if(!grid||!st)return;
+    grid.innerHTML=st.map(function(r){
+      var suffix=r[1]==='plus'?'<span class="plus">'+escH(r[2])+'</span>':(r[2]?'<small>'+escH(r[2])+'</small>':'');
+      var sub=r[4]?'<em>'+escH(r[4])+'</em>':'';
+      return '<div class="nbs"><span class="num"><span class="cnt" data-n="'+(+r[0]||0)+'">'+(+r[0]||0)+'</span>'+suffix+'</span><span class="lb">'+escH(r[3])+sub+'</span></div>';
+    }).join('');
+  }
+  function renderFacts(){
+    var a=CONTENT.about2;if(!a)return;
+    var fw=document.querySelector('.facts');
+    if(fw&&a.facts)fw.innerHTML=a.facts.map(function(f,i){
+      return '<div class="fact '+(i%2?'rv-r':'rv-l')+'"><span class="k">'+escH(f[0])+'</span><span class="v">'+escH(f[1])+'</span></div>';
+    }).join('');
+    var aw=document.querySelector('.awards');
+    if(aw&&a.awards){
+      var icons=['emoji_events','military_tech'];
+      aw.innerHTML=a.awards.map(function(w,i){
+        return '<div class="award rv-rot"><span class="medal"><span class="msym">'+(icons[i]||'workspace_premium')+'</span></span><div><b>'+escH(w[0])+'</b><span>'+escH(w[1])+'</span></div></div>';
+      }).join('');
+    }
+  }
+  function renderVoices(){
+    var vs=CONTENT.voices;var host=document.querySelector('.voices');
+    if(!host||!vs)return;
+    var cls=['rv-l','','rv-r'];
+    host.innerHTML=vs.map(function(v,i){
+      var who=String(v[1]||'').split(/\n/).map(escH).join('<br>');
+      return '<div class="voice '+(cls[i%3]||'')+'"><div class="vb">'+escH(v[0])+'</div><div class="who"><span class="avatar"><span class="msym">person</span></span><span>'+who+'</span></div></div>';
+    }).join('');
+  }
+  function renderDisc(){
+    var d=CONTENT.disc;if(!d||!d.cards)return;
+    document.querySelectorAll('.caro2 .c').forEach(function(el,i){
+      var cd=d.cards[i];if(!cd)return;
+      var b=el.querySelector('.cap b');if(b)b.textContent=cd[0];
+      var ph=el.querySelector('.ph');
+      if(ph){
+        if(cd[1])ph.style.setProperty('background-image','url("'+String(cd[1]).replace(/"/g,'%22')+'")','important');
+        else ph.style.removeProperty('background-image');
+        if(cd[2])ph.style.setProperty('background-position',cd[2],'important');
+      }
+    });
+  }
+  function renderSiteContent(){renderRegion('kanto');renderRegion('kansai');renderDepts();renderPillars();renderMoments();renderHow();renderSwarm();renderPhotos();renderNb();renderFacts();renderVoices();renderDisc();applyTextOverrides();}
   renderSiteContent();
   try{matchMedia('(max-width:760px)').addEventListener('change',function(){renderSiteContent();});}catch(_e){}
   (function(){
@@ -2855,8 +2976,14 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       if(open)open.scrollTop=st;
     }
     var ed=document.createElement('div');ed.id='siteEditor';
-    ed.innerHTML='<div class="se-head"><b>サイト編集</b><button class="se-mob-tg se-min" type="button">📱 スマホ表示</button><button class="se-min se-fold" type="button">たたむ</button></div>'
-      +'<div class="se-tabs"><button data-tab="kanto">関東</button><button data-tab="kansai">関西</button><button data-tab="depts">部署</button><button data-tab="pillars">解法</button><button data-tab="swarm">群</button><button data-tab="moments">風景</button><button data-tab="partners">Partner</button></div>'
+    ed.innerHTML='<div class="se-head"><span class="se-logo"></span><b>サイト編集</b><button class="se-min se-fold" type="button">たたむ</button></div>'
+      +'<div class="se-modes"><span class="se-modes-l">編集モード</span><div class="se-modebtns"><button class="se-mob-tg" type="button"><i>📱</i>スマホ表示</button><button class="se-pos-tg" type="button"><i>🖼</i>構図調整</button><button class="se-txt-tg" type="button"><i>✏️</i>テキスト</button></div></div>'
+      +'<div class="se-nav"><span class="se-nav-l">編集する場所</span><select class="se-navsel">'
+      +'<optgroup label="ページ"><option value="main">本編(数字・概要・声・カルーセル)</option><option value="kanto">東京・関東ページ</option><option value="kansai">大阪・関西ページ</option></optgroup>'
+      +'<optgroup label="詳細ページ"><option value="depts">部署紹介</option><option value="pillars">解法(交流・情報・環境)</option><option value="partners">Partner</option></optgroup>'
+      +'<optgroup label="パーツ"><option value="swarm">群の円</option><option value="moments">活動の風景・写真</option></optgroup>'
+      +'</select></div>'
+      +'<div class="se-tabs" hidden><button data-tab="main"></button><button data-tab="kanto"></button><button data-tab="kansai"></button><button data-tab="depts"></button><button data-tab="pillars"></button><button data-tab="swarm"></button><button data-tab="moments"></button><button data-tab="partners"></button></div>'
       +'<div class="se-body"></div>'
       +'<div class="se-status"></div>'
       +'<div class="se-foot"><button class="se-save" type="button">保存</button><button class="se-exp" type="button">書き出し</button><button class="se-reset" type="button">初期に戻す</button></div>';
@@ -2866,9 +2993,12 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     document.body.appendChild(dl);
     var body=ed.querySelector('.se-body'), status=ed.querySelector('.se-status');
     function setStatus(t){status.textContent=t;clearTimeout(setStatus._t);setStatus._t=setTimeout(function(){status.textContent='';},2600);}
-    ed.querySelector('.se-fold').addEventListener('click',function(){ed.classList.toggle('min');this.textContent=ed.classList.contains('min')?'開く':'たたむ';});
+    var foldBtn=ed.querySelector('.se-fold');
+    function syncFold(){foldBtn.textContent=ed.classList.contains('min')?'開く':'たたむ';}
+    foldBtn.addEventListener('click',function(e){e.stopPropagation();ed.classList.toggle('min');syncFold();});
+    ed.addEventListener('click',function(){ if(ed.classList.contains('min')){ed.classList.remove('min');syncFold();} }); // たたみ中はどこを押しても復帰
     var mobTg=ed.querySelector('.se-mob-tg');
-    function syncMobTg(){mobTg.style.background=window.__mapMob?'#2e6be6':'';mobTg.style.color=window.__mapMob?'#fff':'';mobTg.textContent=window.__mapMob?'📱 スマホ表示中':'📱 スマホ表示';}
+    function syncMobTg(){mobTg.classList.toggle('on',!!window.__mapMob);}
     mobTg.addEventListener('click',function(){
       window.__mapMob=!window.__mapMob;
       document.body.classList.toggle('se-mapmob',!!window.__mapMob);
@@ -2887,6 +3017,11 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       localStorage.removeItem(SITE_KEY);CONTENT=loadContent();rerender();renderTab();setStatus('初期値に戻しました');
     });
     var tab='kanto', armAdd=false;
+    var navSel=ed.querySelector('.se-navsel');
+    navSel.addEventListener('change',function(){
+      var b=[].find.call(ed.querySelectorAll('.se-tabs button'),function(x){return x.getAttribute('data-tab')===navSel.value;});
+      if(b)b.click();
+    });
     ed.querySelectorAll('.se-tabs button').forEach(function(b){
       b.addEventListener('click',function(){
         tab=b.getAttribute('data-tab');armAdd=false;renderTab();
@@ -2894,6 +3029,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         else if(tab==='pillars'){ovCloseAll(true);setTimeout(function(){var h=document.getElementById('how');if(h)h.scrollIntoView({block:'center',behavior:'instant'});},60);}
         else if(tab==='moments'){ovCloseAll(true);setTimeout(function(){var pv=document.querySelector('.priver');if(pv)pv.scrollIntoView({block:'center',behavior:'instant'});},60);}
         else if(tab==='swarm'){ovCloseAll(true);setTimeout(function(){var sw=document.getElementById('swarm');if(sw)sw.scrollIntoView({block:'center',behavior:'instant'});},60);}
+        else if(tab==='main'){ovCloseAll(true);setTimeout(function(){var nb=document.getElementById('numbers');if(nb)nb.scrollIntoView({block:'center',behavior:'instant'});},60);}
         else ovOpen(tab==='depts'?'dept-page':'region-'+tab);
       });
     });
@@ -2956,7 +3092,17 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     }
     function listEditor(title,arr,mk){
       var w=document.createElement('div');
-      w.innerHTML='<label>'+title+'</label>';
+      if(title){
+        w.className='se-sec';
+        var hd2=document.createElement('button');hd2.type='button';hd2.className='se-sec-h';
+        hd2.innerHTML='<span>'+title+'</span><em>'+arr.length+'件</em><i>▾</i>';
+        var bd2=document.createElement('div');bd2.className='se-sec-b';
+        hd2.addEventListener('click',function(){w.classList.toggle('closed');});
+        w.appendChild(hd2);w.appendChild(bd2);
+        w._body=bd2;
+        var origAppend=w.appendChild.bind(w);
+        w.appendChild=function(el){if(el===hd2||el===bd2)return origAppend(el);return bd2.appendChild(el);};
+      }
       arr.forEach(function(item,idx){
         var row=document.createElement('div');row.className='se-item';
         var box=document.createElement('div');
@@ -2987,6 +3133,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     }
     function renderTab(){
       ed.querySelectorAll('.se-tabs button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===tab);});
+      if(navSel.value!==tab)navSel.value=tab;
       body.innerHTML='';
       if(tab==='depts'){
         // ---- 組織図 ----
@@ -3073,6 +3220,56 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         }));
         var note=document.createElement('p');note.className='se-note';note.textContent='※部署詳細ページを開いた状態で編集するとライブで反映されます。';
         body.appendChild(note);
+        return;
+      }
+      if(tab==='main'){
+        // 実績バンドの数字
+        var nw=listEditor('実績バンドの数字',CONTENT.nb.stats,function(box,r){
+          var r1=document.createElement('div');r1.className='se-row2';
+          var a=document.createElement('input');a.type='text';a.value=r[0];a.placeholder='数値(例: 414)';
+          a.addEventListener('input',function(){r[0]=parseFloat(a.value)||0;rerender();persist();});
+          var sfx=document.createElement('input');sfx.type='text';sfx.value=r[2]||'';sfx.placeholder='添字(例: +116 / % / ヵ国)';
+          sfx.addEventListener('input',function(){r[2]=sfx.value;r[1]=/^\+/.test(sfx.value)?'plus':'unit';rerender();persist();});
+          r1.appendChild(a);r1.appendChild(sfx);
+          var b=document.createElement('input');b.type='text';b.value=r[3]||'';b.placeholder='ラベル';
+          b.addEventListener('input',function(){r[3]=b.value;rerender();persist();});
+          var c2=document.createElement('input');c2.type='text';c2.value=r[4]||'';c2.placeholder='補足(小さく表示・任意)';
+          c2.addEventListener('input',function(){r[4]=c2.value;rerender();persist();});
+          box.appendChild(r1);box.appendChild(b);box.appendChild(c2);
+        });
+        var nadd=document.createElement('button');nadd.className='se-add';nadd.type='button';nadd.textContent='＋ 数字を追加';
+        nadd.addEventListener('click',function(){CONTENT.nb.stats.push([0,'unit','','新しい指標','']);rerender();persist();renderTab();});
+        nw.appendChild(nadd);body.appendChild(nw);
+        // 団体概要
+        var fw2=pairList('団体概要(項目/内容)',CONTENT.about2.facts);
+        body.appendChild(fw2);
+        var aw2=pairList('受賞歴(タイトル/説明)',CONTENT.about2.awards);
+        body.appendChild(aw2);
+        // 当事者の声
+        var vw2=listEditor('当事者の声',CONTENT.voices,function(box,v){
+          var q=document.createElement('textarea');q.value=v[0]||'';q.placeholder='引用(声)';
+          q.addEventListener('input',function(){v[0]=q.value;rerender();persist();});
+          var w2=document.createElement('input');w2.type='text';w2.value=(v[1]||'').replace(/\n/g,' / ');w2.placeholder='誰の声か( / で2行に)';
+          w2.addEventListener('input',function(){v[1]=w2.value.split('/').map(function(x){return x.trim();}).join('\n');rerender();persist();});
+          box.appendChild(q);box.appendChild(w2);
+        });
+        var vadd=document.createElement('button');vadd.className='se-add';vadd.type='button';vadd.textContent='＋ 声を追加';
+        vadd.addEventListener('click',function(){CONTENT.voices.push(['新しい声','どこかの誰か']);rerender();persist();renderTab();});
+        vw2.appendChild(vadd);body.appendChild(vw2);
+        // カルーセル(discover)
+        var dw2=listEditor('「connec+aを、知る。」カルーセル(5枚)',CONTENT.disc.cards,function(box,cd){
+          var a=document.createElement('input');a.type='text';a.value=cd[0]||'';a.placeholder='キャプション';
+          a.addEventListener('input',function(){cd[0]=a.value;rerender();persist();});
+          var pw2=document.createElement('div');pw2.style.marginTop='5px';
+          pw2.appendChild(photoInput(function(){return cd[1];},function(v){cd[1]=v;},1200,'カード写真(任意)'));
+          var p2=document.createElement('input');p2.type='text';p2.value=cd[2]||'';p2.placeholder='写真位置';p2.style.marginTop='5px';
+          p2.addEventListener('input',function(){cd[2]=p2.value;rerender();persist();});
+          pw2.appendChild(p2);
+          box.appendChild(a);box.appendChild(pw2);
+        });
+        body.appendChild(dw2);
+        var mn2=document.createElement('p');mn2.className='se-note';mn2.textContent='※見出しや本文などその他の文字は、ヘッダーの「✏️ テキスト」でページ上を直接クリックして編集できます。';
+        body.appendChild(mn2);
         return;
       }
       if(tab==='swarm'){
@@ -3322,8 +3519,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     };
     window.__editBindSwarm();
     // テキスト編集モード: ページ上の文字をクリックしてその場で書き換え
-    var txtTg=document.createElement('button');txtTg.className='se-min';txtTg.type='button';txtTg.textContent='✏️ テキスト';
-    ed.querySelector('.se-head').insertBefore(txtTg,ed.querySelector('.se-fold'));
+    var txtTg=ed.querySelector('.se-txt-tg');
     function cssPath(el){
       var parts=[];
       while(el&&el!==document.body){
@@ -3340,11 +3536,38 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         &&el.childElementCount===0&&el.textContent.trim().length>0
         &&!el.closest('.rg-lines')&&!/^(SCRIPT|STYLE|INPUT|TEXTAREA|SELECT|IMG|SVG)$/.test(el.tagName);
     }
+    var txtDragged=false;
+    document.addEventListener('pointerdown',function(e){
+      if(!document.body.classList.contains('se-textmode'))return;
+      var el=e.target;
+      if(el.closest('#siteEditor')||!txtEligible(el))return;
+      // ドラッグ=位置移動(4px超で発動)。クリック(動かさず離す)=文章編集
+      var path=cssPath(el);
+      var base=(CONTENT.textOffsets||{})[path]||[0,0];
+      var sx=e.clientX,sy=e.clientY;var moved=false;
+      txtDragged=false;
+      function mv(ev){
+        var dx=ev.clientX-sx,dy=ev.clientY-sy;
+        if(!moved&&Math.hypot(dx,dy)<4)return;
+        moved=true;txtDragged=true;
+        el.style.position='relative';
+        el.style.left=(base[0]+dx)+'px';el.style.top=(base[1]+dy)+'px';
+      }
+      function up(ev){
+        removeEventListener('pointermove',mv);removeEventListener('pointerup',up);
+        if(moved){
+          CONTENT.textOffsets[path]=[base[0]+(ev.clientX-sx),base[1]+(ev.clientY-sy)];
+          persist('位置を保存しました');
+        }
+      }
+      addEventListener('pointermove',mv);addEventListener('pointerup',up);
+    },true);
     document.addEventListener('click',function(e){
       if(!document.body.classList.contains('se-textmode'))return;
       var el=e.target;
       if(el.closest('#siteEditor'))return;
       e.preventDefault();e.stopPropagation();
+      if(txtDragged){txtDragged=false;return;} // ドラッグ直後は編集を開かない
       if(!txtEligible(el))return;
       el.setAttribute('contenteditable','plaintext-only');
       el.focus();
@@ -3352,13 +3575,85 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       function fin(){
         if(done)return;done=true;
         el.removeAttribute('contenteditable');
-        CONTENT.textOverrides[cssPath(el)]=el.textContent;
-        persist('テキストを保存しました');
+        var v=el.innerText; // 改行(Enter)を保持
+        CONTENT.textOverrides[cssPath(el)]=v;
+        el.textContent=v;
+        if(/\n/.test(v))el.style.whiteSpace='pre-line';
+        persist('テキストを保存しました(Enter=改行もそのまま反映)');
         el.removeEventListener('blur',fin);
       }
       el.addEventListener('blur',fin);
     },true);
-    function syncTxtTg(){var on=document.body.classList.contains('se-textmode');txtTg.style.background=on?'#2e6be6':'';txtTg.style.color=on?'#fff':'';txtTg.textContent=on?'✏️ 編集中':'✏️ テキスト';}
+    // 🖼 構図調整モード: 大きな写真を直接ドラッグして background-position を微調整
+    var posTg=ed.querySelector('.se-pos-tg');
+    function parsePos(v){
+      var p=String(v||'center').trim().split(/\s+/);
+      function n(x,def){if(x==null)return def;if(x==='center')return 50;if(x==='left'||x==='top')return 0;if(x==='right'||x==='bottom')return 100;var m=parseFloat(x);return isNaN(m)?def:m;}
+      return [n(p[0],50),n(p[1]!=null?p[1]:p[0]==='center'?'center':p[1],50)];
+    }
+    function posEntryFor(t){
+      var e;
+      if(document.querySelector('.pillar-page.open')&&(e=t.closest('.plr-hero'))){
+        var pid=t.closest('.pillar-page').id.replace('pillar-','');var pp=CONTENT.pillars[pid];
+        if(pp)return {el:e.querySelector('.plr-ph'),get:function(){return pp.photoPos;},set:function(v){pp.photoPos=v;},imp:false};
+      }
+      if((e=t.closest('.partner-page.open'))&&t.closest('.pt-hero')&&window.__curPartner){
+        var pt=CONTENT.partners[window.__curPartner];
+        if(pt)return {el:e.querySelector('.pt-ph'),get:function(){return pt.photoPos;},set:function(v){pt.photoPos=v;},imp:false};
+      }
+      if((e=t.closest('.region-page.open'))){
+        var rk=e.id.replace('region-','');var rc=CONTENT.regions[rk];
+        if(rc&&!t.closest('.rg-map'))return {el:e.querySelector('.rg-ph'),get:function(){return rc.photoPos;},set:function(v){rc.photoPos=v;},imp:false};
+      }
+      if((e=t.closest('.dept-page.open'))&&e.classList.contains('has-dbg')&&renderTab._dept){
+        var dd=CONTENT.depts[renderTab._dept];
+        if(dd)return {el:e.querySelector('.dbg-ph'),get:function(){return dd.photoPos;},set:function(v){dd.photoPos=v;},imp:false};
+      }
+      if((e=t.closest('.interlude'))){
+        var k=['il-a','il-sm','il-m1','il-m2'].filter(function(c){return e.classList.contains(c);})[0];
+        if(k)return {el:e.querySelector('.il-ph'),get:function(){return CONTENT.photos.il[k][1];},set:function(v){CONTENT.photos.il[k][1]=v;},imp:true};
+      }
+      if((e=t.closest('.hero'))){
+        return {el:e.querySelector('.slide.s1'),get:function(){return CONTENT.photos.hero[1];},set:function(v){CONTENT.photos.hero[1]=v;},imp:true};
+      }
+      return null;
+    }
+    document.addEventListener('pointerdown',function(e){
+      if(!document.body.classList.contains('se-posmode'))return;
+      if(e.target.closest('#siteEditor'))return;
+      var ent=posEntryFor(e.target);if(!ent||!ent.el)return;
+      e.preventDefault();e.stopPropagation();
+      var cs=getComputedStyle(ent.el);
+      var st=parsePos(ent.get()||cs.backgroundPosition);
+      var sx=e.clientX,sy=e.clientY,w=ent.el.clientWidth||1,h=ent.el.clientHeight||1,last=st;
+      function mv(ev){
+        var nx=Math.min(100,Math.max(0,st[0]-(ev.clientX-sx)/w*130));
+        var ny=Math.min(100,Math.max(0,st[1]-(ev.clientY-sy)/h*130));
+        last=[+nx.toFixed(1),+ny.toFixed(1)];
+        var v=last[0]+'% '+last[1]+'%';
+        if(ent.imp)ent.el.style.setProperty('background-position',v,'important');
+        else ent.el.style.backgroundPosition=v;
+      }
+      function up(){
+        removeEventListener('pointermove',mv);removeEventListener('pointerup',up);
+        ent.set(last[0]+'% '+last[1]+'%');
+        rerender();persist('構図を保存しました');
+        if(tab)renderTab();
+      }
+      addEventListener('pointermove',mv);addEventListener('pointerup',up);
+    },true);
+    document.addEventListener('click',function(e){
+      if(!document.body.classList.contains('se-posmode'))return;
+      if(e.target.closest('#siteEditor'))return;
+      if(posEntryFor(e.target)){e.preventDefault();e.stopPropagation();}
+    },true);
+    function syncPosTg(){posTg.classList.toggle('on',document.body.classList.contains('se-posmode'));}
+    posTg.addEventListener('click',function(){
+      document.body.classList.toggle('se-posmode');syncPosTg();
+      setStatus(document.body.classList.contains('se-posmode')?'構図調整: ヒーロー/幕間/各ページの大写真をドラッグすると見せる位置が変わります':'構図調整を終了しました');
+    });
+    syncPosTg();
+    function syncTxtTg(){txtTg.classList.toggle('on',document.body.classList.contains('se-textmode'));}
     txtTg.addEventListener('click',function(){
       document.body.classList.toggle('se-textmode');syncTxtTg();
       setStatus(document.body.classList.contains('se-textmode')?'テキスト編集: ページ上の文字をクリックして直接書き換え(クリック遷移は一時停止)':'テキスト編集を終了しました');
@@ -3702,6 +3997,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       if(W<=1200){xf = xf<.4 ? .018 : (xf>.6 ? .982 : .5);} // 狭幅は余白が無いので糸を画面エッジに沿わせる
       pts.push([W*xf, r.top+scrollY+(sp[2]==='b' ? Math.max(90,r.height-90) : Math.min(160,r.height*.3))]);
     });
+    if(pts.length){var maxY=pts[pts.length-1][1]+80;svg.setAttribute('height',Math.min(H,maxY));}
     var d='M'+pts[0][0].toFixed(1)+','+pts[0][1].toFixed(1);
     for(var i=0;i<pts.length-1;i++){
       var p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)];
