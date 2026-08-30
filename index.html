@@ -386,7 +386,8 @@ svg{display:block}
 body.ap-lock{overflow:hidden}
 html{overflow-x:clip}
 /* (幕間) モバイルはインタールード=全画面の扉絵(写真の中身が左→右にパン) */
-@media(max-width:760px){div.interlude,div.interlude.il-sm{height:100vh;height:100svh;min-height:620px}.interlude .il-ph{animation-duration:13s}.interlude.il-sm .il-ph{animation-duration:11s}}
+@media(max-width:760px){div.interlude,div.interlude.il-sm{height:100vh;height:100svh;min-height:620px}.interlude .il-ph{animation-duration:13s}.interlude.il-sm .il-ph{animation-duration:11s}
+.interlude .il-t{font-size:clamp(18px,5.4vw,23px);letter-spacing:.1em;white-space:nowrap}}
 .il-mob{display:none}
 @media(max-width:760px){.il-mob{display:block}}
 /* (AP) オーバーレイページの入場モーション(開くたび再生) */
@@ -462,6 +463,11 @@ html{overflow-x:clip}
 .li{display:flex;align-items:center;gap:22px;padding:24px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:padding .2s}
 .li:last-child{border-bottom:0}
 .li:hover{padding-left:8px}
+@media(max-width:600px){
+  .li{flex-wrap:wrap;gap:8px 12px;position:relative;padding-right:30px}
+  .li .tt{flex:1 1 100%;order:3;line-height:1.8}
+  .li .go{position:absolute;right:0;top:24px}
+}
 .li .date{font-family:var(--latin);font-size:13.5px;color:var(--ink2);flex:none;width:96px}
 .li .tag{font-size:11px;font-weight:700;color:var(--blue);background:rgba(30,80,162,.09);padding:3px 10px;border-radius:6px;flex:none}
 .li .tt{flex:1;min-width:0;font-size:15px;font-weight:500}
@@ -1235,6 +1241,10 @@ body.nav-open{overflow:hidden}
 .swarm.in .sw-tag{opacity:1}
 @media(max-width:900px){.swarm{margin-right:0;height:clamp(360px,88vw,470px)}}
 @media (prefers-reduced-motion: reduce){.sw-c,.sw-core,.sw-tag{opacity:1!important;transform:none!important;transition:none!important}}
+@media(max-width:760px){
+  .sw-tag{font-size:8.5px;letter-spacing:.16em;gap:5px}
+  .swarm span.sw-tag:last-of-type{left:auto!important;right:2%!important}
+}
 
 /* 群戦略オービット(旧・未使用) */
 .orbit{position:relative;margin-top:clamp(40px,5vw,64px)}
