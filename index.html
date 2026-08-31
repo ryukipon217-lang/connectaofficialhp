@@ -834,6 +834,7 @@ body.se-mapmob .about-page.open .ap-close{position:absolute}
 body.se-mapmob .rg-mapfit{max-width:100%;height:auto}
 body.se-mapmob .rg-map{height:auto}
 body.se-mapmob .rg-callout{max-width:9.5em}
+body.se-mapmob .swarm{width:390px;max-width:100%;height:345px;justify-self:center;margin-right:0}
 body.se-posmode .hero,body.se-posmode .interlude,body.se-posmode .plr-hero,body.se-posmode .pt-hero{cursor:move}
 body.se-textmode [contenteditable]{outline:2px solid #2e6be6;outline-offset:2px;border-radius:4px}
 body.se-textmode h1:hover,body.se-textmode h2:hover,body.se-textmode h3:hover,body.se-textmode p:hover,body.se-textmode span:hover,body.se-textmode b:hover,body.se-textmode small:hover,body.se-textmode a:hover,body.se-textmode li:hover,body.se-textmode em:hover{outline:1.5px dashed rgba(90,140,255,.75);outline-offset:2px;cursor:text}
@@ -2817,7 +2818,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       var hd=sec.querySelectorAll('.how-detail .hd')[i];
       if(hd){
         var k=hd.querySelector('.hd-k'),h3=hd.querySelector('h3'),pp=hd.querySelector('p');
-        if(k)k.textContent=p.k; if(h3)h3.textContent=p.name; if(pp)pp.textContent=p.hd||'';
+        if(k)k.textContent=p.k; if(h3)h3.textContent=p.name; if(pp)pp.textContent=p.hd||p.lead||'';   // 説明文が空なら詳細ページのリード文と連動
       }
       var dp=sec.querySelector('.dial-photo.p'+i);
       if(dp){
@@ -2829,12 +2830,14 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   }
   function renderSwarm(){
     var sw=CONTENT.swarm;if(!sw||!sw.circles)return;
+    var mob=window.__mapMob||matchMedia('(max-width:760px)').matches;   // スマホは別配置(mx/my/mw・未設定ならPC値を継承)
     Object.keys(sw.circles).forEach(function(k){
       var cfg=sw.circles[k];
       var el=document.querySelector('#swarm .sw-'+k);if(!el)return;
-      if(cfg.x!=null){el.style.left=cfg.x+'%';el.style.right='auto';}
-      if(cfg.y!=null){el.style.top=cfg.y+'%';el.style.bottom='auto';}
-      if(cfg.w!=null)el.style.width=cfg.w+'%';
+      var x=(mob&&cfg.mx!=null)?cfg.mx:cfg.x, y=(mob&&cfg.my!=null)?cfg.my:cfg.y, w=(mob&&cfg.mw!=null)?cfg.mw:cfg.w;
+      if(x!=null){el.style.left=x+'%';el.style.right='auto';}else{el.style.left='';el.style.right='';}
+      if(y!=null){el.style.top=y+'%';el.style.bottom='auto';}else{el.style.top='';el.style.bottom='';}
+      if(w!=null)el.style.width=w+'%';else el.style.width='';
       var ph=el.querySelector('.swp');
       if(ph){
         if(cfg.photo)ph.style.setProperty('background-image','url("'+String(cfg.photo).replace(/"/g,'%22')+'")','important');
@@ -3003,7 +3006,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       window.__mapMob=!window.__mapMob;
       document.body.classList.toggle('se-mapmob',!!window.__mapMob);
       rerender();renderTab();syncMobTg();
-      setStatus(window.__mapMob?'スマホ大の画面で編集中 — 地図の吹き出しドラッグはモバイル配置として保存されます':'PC表示に戻りました');
+      setStatus(window.__mapMob?'スマホ大の画面で編集中 — 地図の吹き出し/群の円のドラッグはモバイル配置として保存されます':'PC表示に戻りました');
     });
     syncMobTg();
     ed.querySelector('.se-save').addEventListener('click',function(){persist('保存しました');});
@@ -3273,6 +3276,17 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         return;
       }
       if(tab==='swarm'){
+        var swMtg=document.createElement('button');swMtg.className='se-add';swMtg.type='button';swMtg.style.width='auto';swMtg.style.marginTop='0';swMtg.style.padding='6px 10px';
+        swMtg.textContent=window.__mapMob?'スマホ配置を編集中(押すとPCへ)':'スマホ配置を編集';
+        if(window.__mapMob)swMtg.classList.add('on');
+        swMtg.addEventListener('click',function(){
+          window.__mapMob=!window.__mapMob;
+          document.body.classList.toggle('se-mapmob',!!window.__mapMob);
+          rerender();renderTab();syncMobTg();
+          setStatus(window.__mapMob?'群がスマホ幅に。ここでのドラッグ/大きさはスマホ専用配置として保存されます':'PC配置に戻りました');
+          setTimeout(function(){var sw=document.getElementById('swarm');if(sw)sw.scrollIntoView({block:'center',behavior:'instant'});},60);
+        });
+        body.appendChild(swMtg);
         var NAMES={if:'IF TOUR',om:'ORDERMADE',cc:'COMMUNITY',hub:'HUB',cclab:'CO-CREATION LAB'};
         Object.keys(CONTENT.swarm.circles).forEach(function(k){
           var cfg=CONTENT.swarm.circles[k];
@@ -3284,10 +3298,13 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
           r2.appendChild(inp('写真位置',cfg.pos,function(v){cfg.pos=v;}));
           r2.appendChild(inp('ズーム(例: 180%)',cfg.zoom,function(v){cfg.zoom=v;}));
           bx.appendChild(r2);
-          bx.appendChild(inp('円の大きさ(%・空=既定)',cfg.w==null?'':cfg.w,function(v){cfg.w=v===''?null:parseFloat(v);}));
+          var r3=document.createElement('div');r3.className='se-row2';
+          r3.appendChild(inp('円の大きさ(%・空=既定)',cfg.w==null?'':cfg.w,function(v){cfg.w=v===''?null:parseFloat(v);}));
+          r3.appendChild(inp('大きさ スマホ(空=PCと同じ)',cfg.mw==null?'':cfg.mw,function(v){cfg.mw=v===''?null:parseFloat(v);}));
+          bx.appendChild(r3);
           card.appendChild(bx);body.appendChild(card);
         });
-        var sn=document.createElement('p');sn.className='se-note';sn.textContent='※円の位置は、本編の群セクションで円を直接ドラッグして動かせます(自動保存)。';
+        var sn=document.createElement('p');sn.className='se-note';sn.textContent='※円の位置は、本編の群セクションで円を直接ドラッグして動かせます(自動保存)。「スマホ配置を編集」中(またはスマホ実機で編集中)のドラッグはスマホ専用の配置として保存され、PCの配置には影響しません。';
         body.appendChild(sn);
         return;
       }
@@ -3355,9 +3372,11 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         var pw0=document.createElement('div');pw0.innerHTML='<label>解法ページを選択</label>';pw0.appendChild(psel);body.appendChild(pw0);
         psel.addEventListener('change',function(){renderTab._pillar=psel.value;renderTab();ovOpen('pillar-'+psel.value);});
         var pk2=psel.value, pp=CONTENT.pillars[pk2];
+        var syncNote=document.createElement('p');syncNote.className='se-note';syncNote.textContent='※章ラベル・タイトルは「解法セクション(#how)」と「詳細ページ」の両方に連動して反映されます。';
+        body.appendChild(syncNote);
         body.appendChild(inp('章ラベル(例: 場を編む)',pp.k,function(v){pp.k=v;}));
         body.appendChild(inp('タイトル',pp.name,function(v){pp.name=v;}));
-        body.appendChild(inp('回転パネルの説明文(howセクション)',pp.hd,function(v){pp.hd=v;},true));
+        body.appendChild(inp('#howの説明文(空=詳細ページのリード文と連動)',pp.hd,function(v){pp.hd=v;},true));
         var dlb=document.createElement('div');dlb.innerHTML='<label>円の写真(howセクションのダイヤル)</label>';body.appendChild(dlb);
         body.appendChild(photoInput(function(){return pp.dial;},function(v){pp.dial=v;},1400));
         body.appendChild(inp('円写真の位置',pp.dialPos,function(v){pp.dialPos=v;}));
@@ -3497,19 +3516,20 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       var swEl=document.getElementById('swarm');if(!swEl)return;
       swEl.querySelectorAll('.sw-c').forEach(function(cEl){
         if(cEl._dragBound)return;cEl._dragBound=true;
-        cEl.style.cursor='grab';
+        cEl.style.cursor='grab';cEl.style.touchAction='none';   // スマホ実機でドラッグがスクロールに奪われないように
         cEl.addEventListener('pointerdown',function(e){
           e.preventDefault();e.stopPropagation();
           var key=[].map.call(cEl.classList,function(x){return x.replace('sw-','');}).filter(function(x){return CONTENT.swarm.circles[x];})[0];
           if(!key)return;
           var cfg=CONTENT.swarm.circles[key];
+          var mb=window.__mapMob||matchMedia('(max-width:760px)').matches;   // スマホ(または スマホ表示 中)はモバイル配置として保存
           var r=swEl.getBoundingClientRect(), cr=cEl.getBoundingClientRect();
           var ox=e.clientX-cr.left, oy=e.clientY-cr.top, moved=false;
           function mv(ev){
             moved=true;window.__pinDragged=true;
             var x=+(((ev.clientX-ox-r.left)/r.width)*100).toFixed(1);
             var y=+(((ev.clientY-oy-r.top)/r.height)*100).toFixed(1);
-            cfg.x=x;cfg.y=y;
+            if(mb){cfg.mx=x;cfg.my=y;}else{cfg.x=x;cfg.y=y;}
             cEl.style.left=x+'%';cEl.style.top=y+'%';cEl.style.right='auto';cEl.style.bottom='auto';
           }
           function up(){removeEventListener('pointermove',mv);removeEventListener('pointerup',up);if(moved)persist();}
@@ -3533,7 +3553,8 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     }
     function txtEligible(el){
       return el&&el.nodeType===1&&!el.closest('#siteEditor')&&!el.classList.contains('msym')
-        &&el.childElementCount===0&&el.textContent.trim().length>0
+        &&(el.childElementCount===0||[].every.call(el.children,function(c){return c.tagName==='BR';}))   // <br>だけの見出し(#howの大見出し等)も編集対象
+        &&el.textContent.trim().length>0
         &&!el.closest('.rg-lines')&&!/^(SCRIPT|STYLE|INPUT|TEXTAREA|SELECT|IMG|SVG)$/.test(el.tagName);
     }
     var txtDragged=false;
