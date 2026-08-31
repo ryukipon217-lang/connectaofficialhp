@@ -2557,10 +2557,31 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     if(st.textOffsets)c.textOffsets=st.textOffsets;
     if(st.photos)c.photos=st.photos;
   }
+  // (SitePublish) 公開キャッシュはIndexedDBに保存する。
+  //   localStorageは5〜10MBの上限があり、公開データ(写真込み約3.4MB=UTF-16で約7MB)が入らない端末(特にiPhone)で
+  //   保存例外→描画まで止まり「公開が反映されない」実障害になった。IDBは実質無制限+保存失敗でも表示は必ず反映する。
+  function idbKV(mode,key,val){
+    return new Promise(function(res){
+      try{
+        var rq=indexedDB.open('connectaSite',1);
+        rq.onupgradeneeded=function(){try{rq.result.createObjectStore('kv')}catch(e){}};
+        rq.onerror=function(){res(null)};
+        rq.onsuccess=function(){
+          try{
+            var tx=rq.result.transaction('kv',mode==='get'?'readonly':'readwrite'),st=tx.objectStore('kv');
+            if(mode==='get'){var g=st.get(key);g.onsuccess=function(){res(g.result||null)};g.onerror=function(){res(null)};}
+            else{st.put(val,key);tx.oncomplete=function(){res(true)};tx.onerror=function(){res(null)};}
+          }catch(e){res(null)}
+        };
+      }catch(e){res(null)}
+    });
+  }
+  var PUB_MEM=null;   // 公開済みコンテンツ {version,content}(メモリ保持=保存可否に依存しない)
   function loadContent(){
     var c=JSON.parse(JSON.stringify(SITE_DEFAULT));
-    // 公開済みコンテンツ(全端末共通・GASから取得しキャッシュ)→ この端末のローカル編集、の順で上書き
-    try{var pub=JSON.parse(localStorage.getItem(PUBKEY)||'null');if(pub&&pub.content)_mergeSite(c,pub.content);}catch(_e){}
+    // 公開済みコンテンツ(全端末共通)→ この端末のローカル編集、の順で上書き
+    if(PUB_MEM&&PUB_MEM.content)_mergeSite(c,PUB_MEM.content);
+    else{try{var pub=JSON.parse(localStorage.getItem(PUBKEY)||'null');if(pub&&pub.content)_mergeSite(c,pub.content);}catch(_e){}}   // 旧localStorageキャッシュ互換
     try{_mergeSite(c,JSON.parse(localStorage.getItem(SITE_KEY)||'null'));}catch(_e){}
     try{delete c.depts.jigyo;}catch(_e){} // 旧「交流推進事業」一括りはIF/OM/CCへ分割済み
     return c;
@@ -2993,22 +3014,32 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   try{matchMedia('(max-width:760px)').addEventListener('change',function(){renderSiteContent();});}catch(_e){}
   // (SitePublish) 公開済みコンテンツの同期: キャッシュで即描画→裏でバージョン照会→更新があれば取得して再描画。
   // 読み込み時に加え、タブ復帰時(visibilitychange/pageshow)にも確認する=開きっぱなしの端末にも公開が届く。
+  function applyPub(pub,persist){
+    PUB_MEM=pub;
+    CONTENT=loadContent();renderSiteContent();   // 表示への反映を最優先(保存の成否に依存しない)
+    if(persist)idbKV('set','pub',pub).then(function(ok){if(ok){try{localStorage.removeItem(PUBKEY)}catch(e){}}});   // 旧キャッシュは容量圧迫源なので破棄
+  }
+  window.__applyPub=applyPub;   // 公開ボタン(編集IIFE)から利用
   function syncPublished(){
     var now=Date.now();
     if(syncPublished._at&&now-syncPublished._at<60000)return;   // 60秒スロットル
     syncPublished._at=now;
-    var cached=null;try{cached=JSON.parse(localStorage.getItem(PUBKEY)||'null')}catch(_e){}
-    var v=(cached&&cached.version)||0;
-    fetch(SITE_GAS+'?action=getSiteContent&params='+encodeURIComponent(JSON.stringify({ifVersion:v})))
-      .then(function(r){return r.json();})
-      .then(function(res){
-        var d=res&&res.ok&&res.data;
-        if(!d||d.unchanged)return;
-        if(d.content&&d.version){localStorage.setItem(PUBKEY,JSON.stringify({version:d.version,content:d.content}));}
-        else if(!d.version){localStorage.removeItem(PUBKEY);}
-        else return;
-        CONTENT=loadContent();renderSiteContent();
-      }).catch(function(){syncPublished._at=0;});
+    function check(v){
+      fetch(SITE_GAS+'?action=getSiteContent&params='+encodeURIComponent(JSON.stringify({ifVersion:v})))
+        .then(function(r){return r.json();})
+        .then(function(res){
+          var d=res&&res.ok&&res.data;
+          if(!d||d.unchanged)return;
+          if(d.content&&d.version)applyPub({version:d.version,content:d.content},true);
+          else if(!d.version&&PUB_MEM){PUB_MEM=null;idbKV('set','pub',null);CONTENT=loadContent();renderSiteContent();}
+        }).catch(function(){syncPublished._at=0;});
+    }
+    if(PUB_MEM){check(PUB_MEM.version);return;}
+    idbKV('get','pub').then(function(pub){
+      if(!pub){try{pub=JSON.parse(localStorage.getItem(PUBKEY)||'null')}catch(e){}}   // 旧localStorageキャッシュから移行
+      if(pub&&pub.content)applyPub(pub,true);
+      check((pub&&pub.version)||0);
+    });
   }
   syncPublished();
   addEventListener('pageshow',function(e){if(e.persisted)syncPublished();});
@@ -3122,8 +3153,8 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
             if(res&&res.unauthorized){localStorage.removeItem(ADMKEY);setStatus('⚠ ログインの有効期限が切れました。もう一度「公開」を押してください');return}
             if(!res||!res.ok)throw new Error((res&&res.error)||'公開に失敗しました');
             var ver=res.data&&res.data.version;
-            try{localStorage.setItem(PUBKEY,JSON.stringify({version:ver,content:JSON.parse(JSON.stringify(CONTENT))}))}catch(e){}
-            setStatus('公開しました ✓ 全端末に反映されます(開いている端末は次の読み込みで更新)');
+            try{window.__applyPub({version:ver,content:JSON.parse(JSON.stringify(CONTENT))},true)}catch(e){}
+            setStatus('公開しました ✓ 全端末に反映されます(開いている端末にも自動で届きます)');
           }).catch(function(e){pubBtn.disabled=false;pubBtn.textContent='公開';setStatus('⚠ '+String(e&&e.message||e));});
       });
     });
