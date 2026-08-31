@@ -182,7 +182,7 @@ function renderEntry(ctx){
       '</div>'+
       '<label class="check"><input type="checkbox" id="f_remote"><span class="t">フルリモートでの参加を希望する<small>対面イベントへの参加が難しい場合もオンラインで活動できます。</small></span></label>'+
       (preset
-        ?'<div class="fld"><label>所属部署</label><div class="fixedval">'+esc(preset.name)+'<small>運営にて決定済みの所属です。</small></div></div>'
+        ?'<div class="fld"><label>所属部署</label><div class="fixedval">'+esc(preset.name)+((ctx.presetSubDepts&&ctx.presetSubDepts.length)?'（兼任: '+esc(ctx.presetSubDepts.map(function(x){return x.name}).join('、'))+'）':'')+'<small>運営にて決定済みの所属です。</small></div></div>'
         :'<div class="fld"><label>希望部署<span class="opt">任意</span></label><select id="f_dept">'+opts(ctx.departments||[])+'</select><div class="hint">未定のままでも送信できます。その場合は運営にて確認のうえ決定します。</div></div>')+
     '</section>'+
 
