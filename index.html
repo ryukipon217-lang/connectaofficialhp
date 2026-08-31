@@ -2700,15 +2700,18 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     }
     return h;
   }
-  function showDept(key){
-    var pg=document.getElementById('dept-page');if(!pg)return;
-    var dp=CONTENT.depts[key]||{};
+  function applyDeptBg(pg,dp){
     var bg=pg.querySelector('.dbg-ph');
-    if(dp.style==='bg'&&dp.photo&&bg){
+    if(dp&&dp.style==='bg'&&dp.photo&&bg){
       bg.style.backgroundImage=bgUrl(dp.photo);
       bg.style.backgroundPosition=dp.photoPos||'center';
       pg.classList.add('has-dbg');
     }else pg.classList.remove('has-dbg');
+  }
+  function showDept(key){
+    var pg=document.getElementById('dept-page');if(!pg)return;
+    var dp=CONTENT.depts[key]||{};
+    applyDeptBg(pg,dp);
     var body=pg.querySelector('.rg-dept-body');
     body.innerHTML=deptHtml(key);
     body.querySelectorAll('.dnav-b').forEach(function(b){
@@ -2984,6 +2987,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       // 部署詳細を開いたまま編集している場合は詳細も再描画
       var pg=document.getElementById('dept-page');
       if(pg&&pg.classList.contains('open')&&!pg.querySelector('.rg-detail-view').hidden&&renderTab._dept){
+        applyDeptBg(pg,CONTENT.depts[renderTab._dept]);   // スタイル/写真の編集を背景にも即反映(showDept経由でないと出なかった)
         pg.querySelector('.rg-dept-body').innerHTML=deptHtml(renderTab._dept);
       }
       if(open)open.scrollTop=st;
