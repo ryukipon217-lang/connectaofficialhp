@@ -25,6 +25,7 @@
 {"@context":"https://schema.org","@type":"WebSite",
  "name":"学生団体 connec+a(コネクタ)公式サイト","url":"https://connectaofficialhp.connectahubapp.com"}
 </script>
+<link rel="icon" href="connecta-logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+JP:wght@100;200;300;400&family=Zen+Old+Mincho:wght@400;500;600;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..0&display=swap" rel="stylesheet">
@@ -70,9 +71,11 @@ svg{display:block}
 .util .msym{font-size:15px}
 .mainnav{display:flex;align-items:center;gap:26px;padding:0 40px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:900;font-size:21px}
-.mark{position:relative;display:inline-grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--blue);color:#fff;font-weight:900;font-size:18px}
-.mark::before{content:"";position:absolute;top:6px;width:16px;height:7px;border:2.4px solid #fff;border-bottom:0;border-radius:12px 12px 0 0;opacity:.92}
-.mark b{margin-top:5px}
+/* 公式「＋a」ロゴ(実ファイル)。フッター等の暗地はダーク版に切替 */
+.mark{position:relative;display:inline-block;width:38px;height:38px;border-radius:11px;background:url('connecta-logo.svg') center/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(22,61,137,.14)}
+.mark::before{display:none}
+.mark b{display:none}
+.foot .mark{background-image:url('connecta-logo-dark.svg');box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .menu{margin-left:26px;display:flex;align-items:center;gap:24px}
 .menu a{position:relative;font-size:14px;font-weight:500;color:var(--ink);text-decoration:none;padding:20px 0;opacity:.82;transition:opacity .2s}
 .menu a:hover{opacity:1}
@@ -344,7 +347,7 @@ svg{display:block}
 .rstep:not(:last-child)::after{content:"";position:absolute;top:27px;left:50%;width:100%;height:2px;background:var(--line);z-index:0}
 .rnode{position:relative;z-index:1;width:54px;height:54px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;color:var(--ink3)}
 .rstep.key .rnode{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 14px 28px -12px rgba(30,80,162,.6)}
-.rnode .msym{font-size:24px}
+.rnode .msym{font-size:24px;color:inherit}   /* .rstep span(ラベル灰)がアイコンspanにも命中して青円上で灰になるのを打ち消す */
 .rstep b{display:block;font-family:var(--latin);font-weight:700;font-size:11px;letter-spacing:.08em;color:var(--blue);margin:14px 0 4px}
 .rstep span{font-size:12.5px;color:var(--ink2);line-height:1.5}
 .rec-foot{display:flex;flex-direction:column;align-items:center;gap:18px}
@@ -2733,17 +2736,32 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     pg.querySelector('.rg-detail-view').hidden=false;
     pg.scrollTop=0;
   }
+  var DEPT_AUTO_CARD='紹介文は編集画面から追加できます。';
+  function _deptPristine_(dp){
+    // 自動生成されたまま一度も編集されていない部署か(=安全に自動削除できる)
+    return !!dp&&!dp.en&&!dp.head&&!dp.lead&&dp.card===DEPT_AUTO_CARD
+      &&!dp.photo&&!(dp.stats&&dp.stats.length)&&!(dp.events&&dp.events.length)
+      &&!(dp.works&&dp.works.length)&&!(dp.flow&&dp.flow.length);
+  }
   function ensureOrgDepts(){
+    var inOrg={};
+    ((CONTENT.org||{}).groups||[]).forEach(function(g){
+      (g.items||[]).forEach(function(it){it=String(it).trim();if(it)inOrg[it]=1;});
+    });
+    // 自動掃除: 組織図に名前が無くなった「未編集の自動生成部署」は削除
+    //   (部署名の入力中は1打鍵ごとに中間名の部署が生えるため、これが無いとゴミが際限なく溜まる)
+    Object.keys(CONTENT.depts).forEach(function(k){
+      var dp=CONTENT.depts[k];
+      if(dp&&!inOrg[dp.name]&&_deptPristine_(dp))delete CONTENT.depts[k];
+    });
     // 組織図に追加された項目に対応する部署が無ければ自動作成(=詳細ページが自動で生える)
     var names={};Object.keys(CONTENT.depts).forEach(function(k){names[CONTENT.depts[k].name]=1;});
-    ((CONTENT.org||{}).groups||[]).forEach(function(g){
-      (g.items||[]).forEach(function(it){
-        it=String(it).trim();if(!it||names[it])return;
-        var key='d'+Math.abs(it.split('').reduce(function(a,c){return (a*31+c.charCodeAt(0))|0;},7)).toString(36);
-        if(CONTENT.depts[key])return;
-        CONTENT.depts[key]={name:it,en:'',card:'紹介文は編集画面から追加できます。',head:'',lead:''};
-        names[it]=1;
-      });
+    Object.keys(inOrg).forEach(function(it){
+      if(names[it])return;
+      var key='d'+Math.abs(it.split('').reduce(function(a,c){return (a*31+c.charCodeAt(0))|0;},7)).toString(36);
+      if(CONTENT.depts[key])return;
+      CONTENT.depts[key]={name:it,en:'',card:DEPT_AUTO_CARD,head:'',lead:''};
+      names[it]=1;
     });
   }
   function renderOrg(){
