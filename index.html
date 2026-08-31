@@ -2991,8 +2991,12 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitStanza);}catch(_e){}
   addEventListener('resize',function(){clearTimeout(fitStanza._t);fitStanza._t=setTimeout(fitStanza,120);});
   try{matchMedia('(max-width:760px)').addEventListener('change',function(){renderSiteContent();});}catch(_e){}
-  // (SitePublish) 公開済みコンテンツの同期: キャッシュで即描画→裏でバージョン照会→更新があれば取得して再描画
-  (function(){
+  // (SitePublish) 公開済みコンテンツの同期: キャッシュで即描画→裏でバージョン照会→更新があれば取得して再描画。
+  // 読み込み時に加え、タブ復帰時(visibilitychange/pageshow)にも確認する=開きっぱなしの端末にも公開が届く。
+  function syncPublished(){
+    var now=Date.now();
+    if(syncPublished._at&&now-syncPublished._at<60000)return;   // 60秒スロットル
+    syncPublished._at=now;
     var cached=null;try{cached=JSON.parse(localStorage.getItem(PUBKEY)||'null')}catch(_e){}
     var v=(cached&&cached.version)||0;
     fetch(SITE_GAS+'?action=getSiteContent&params='+encodeURIComponent(JSON.stringify({ifVersion:v})))
@@ -3002,9 +3006,13 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         if(!d||d.unchanged)return;
         if(d.content&&d.version){localStorage.setItem(PUBKEY,JSON.stringify({version:d.version,content:d.content}));}
         else if(!d.version){localStorage.removeItem(PUBKEY);}
+        else return;
         CONTENT=loadContent();renderSiteContent();
-      }).catch(function(){});
-  })();
+      }).catch(function(){syncPublished._at=0;});
+  }
+  syncPublished();
+  addEventListener('pageshow',function(e){if(e.persisted)syncPublished();});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')syncPublished();});
   (function(){
     var pg=document.getElementById('dept-page');
     if(!pg)return;
