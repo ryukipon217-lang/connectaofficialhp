@@ -153,6 +153,10 @@ svg{display:block}
 .manifesto .stanza{display:flex;flex-direction:column;gap:40px}
 .manifesto p{font-family:var(--serif);font-weight:500;font-size:clamp(19px,2.8vw,30px);line-height:1;letter-spacing:.15em;margin:0;color:var(--ink)}
 .manifesto .em{color:var(--blue)}
+/* スマホ: PCと同じ行割りを維持(所定の改行以外で2行にしない)。最長行(connec+a行=実測19.7em)が画面に収まるサイズへ自動縮小 */
+@media(max-width:760px){
+  .manifesto p{white-space:nowrap;letter-spacing:.12em;font-size:min(clamp(19px,2.8vw,30px),calc((100vw - 56px)/19.4))}
+}
 .manifesto .mcta{margin-top:48px;text-align:center}
 
 /* ---------- section scaffold ---------- */
@@ -2943,8 +2947,26 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       }
     });
   }
-  function renderSiteContent(){renderRegion('kanto');renderRegion('kansai');renderDepts();renderPillars();renderMoments();renderHow();renderSwarm();renderPhotos();renderNb();renderFacts();renderVoices();renderDisc();applyTextOverrides();}
+  // マニフェスト詩: 所定の改行以外で2行にしない。CSSのnowrap+概算縮小に加え、フォント実測ではみ出す行だけさらに縮める
+  function fitStanza(){
+    var ps=[].slice.call(document.querySelectorAll('.manifesto .stanza p'));
+    if(!ps.length)return;
+    ps.forEach(function(p){p.style.fontSize='';});
+    var scale=1;
+    ps.forEach(function(p){
+      var s=p.querySelector('.rv-mask');if(!s)return;
+      var w=s.scrollWidth, avail=p.clientWidth;
+      if(w>avail&&avail>0)scale=Math.min(scale,avail/w);
+    });
+    if(scale<1)ps.forEach(function(p){   // 全行を同率で縮小=行ごとのサイズ差を出さない
+      var fs=parseFloat(getComputedStyle(p).fontSize);
+      p.style.fontSize=(Math.floor(fs*scale*10)/10-0.2)+'px';
+    });
+  }
+  function renderSiteContent(){renderRegion('kanto');renderRegion('kansai');renderDepts();renderPillars();renderMoments();renderHow();renderSwarm();renderPhotos();renderNb();renderFacts();renderVoices();renderDisc();applyTextOverrides();fitStanza();}
   renderSiteContent();
+  try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitStanza);}catch(_e){}
+  addEventListener('resize',function(){clearTimeout(fitStanza._t);fitStanza._t=setTimeout(fitStanza,120);});
   try{matchMedia('(max-width:760px)').addEventListener('change',function(){renderSiteContent();});}catch(_e){}
   (function(){
     var pg=document.getElementById('dept-page');
