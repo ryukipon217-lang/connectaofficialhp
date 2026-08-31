@@ -65,6 +65,9 @@ h1.title{font-family:var(--serif);font-weight:600;font-size:clamp(26px,5.4vw,34p
 .gbox .gp{font-size:12px;color:var(--ink2);margin:0 0 14px;line-height:1.7}
 
 .consent{border:1px solid var(--line);border-radius:12px;background:var(--soft);padding:18px;font-size:13px;line-height:1.9;color:var(--ink2);margin:0 0 18px;white-space:pre-line}
+details.termsbox{margin:0 0 14px}
+details.termsbox summary{cursor:pointer;font-size:12.5px;color:var(--blue);font-weight:700;letter-spacing:.04em}
+details.termsbox .consent{margin:10px 0 4px;max-height:340px;overflow:auto}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;
   font-family:inherit;font-weight:700;font-size:15px;letter-spacing:.1em;color:#fff;
@@ -113,6 +116,7 @@ var GAS='https://script.google.com/macros/s/AKfycbxLs1eXm39MHM0lSioBf9ghVFL8p8fI
 var Q=new URLSearchParams(location.search);
 var LINK={appId:Q.get('appId')||'',purpose:Q.get('purpose')||'',exp:Q.get('exp')||'',sig:Q.get('sig')||''};
 var PREFS=['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'];
+var TERMS_TEXT='学生団体「connec+a」メンバーシップ規約\n\n第1章 総則\n第1条（名称および所在地）\n1. 本団体の名称は「connec+a」（読み：コネクタ）とします。\n2. 本団体の活動拠点は東京都内を主とした首都圏とします。\n第2条（目的）\n本団体は、国際交流を通じて多文化理解と相互協力を促進し、ボーダレスな社会の実現を目指します。\n\n第2章 メンバーシップ\n第3条（入会資格）\n以下の条件を満たす者が入会できます：\n1. 国内外の中学生・高校生・大学生であること。\n2. 団体のビジョン「国際交流の絶えないボーダレスジャパンへ」に深く共感すること。\n第4条（入会手続き）\n1. 入会希望者は、募集回に応じた応募フォームを提出するものとします。\n2. 提出後、希望日時で開催される団体説明会への参加を義務とします。\n3. 当団体代表とのカジュアルな面談を行います。\n4. 面談後入会が承認されると、正式なメンバーとして登録されます。\n第5条（メンバーとしての義務）\n以下の条件を遵守するものとします：\n1. ビジョンへの共感と意欲 — 団体のビジョンやミッションを共有し、積極的に活動に参加すること。\n2. 異文化理解とコミュニケーション能力 — 多文化的な背景を持つ人々と交流し、簡単な日本語でのコミュニケーションを取ること。\n3. 語学力 — 日本語および英語での基本的なコミュニケーション能力を有すること。\n4. イベント企画・運営経験 — イベントの企画・運営に関する経験や知識があることが望ましい。\n5. チームワークと協調性 — 他のメンバーと協力し、団体の活動を円滑に進めること。\n\n第3章 会費および活動\n第6条（会費）\n現時点で会費はありません。\n第7条（活動内容）\nメンバーは、以下の主要事業に参加し、活動を支援します：\n・International Friendship Tour\n・connec+a hub\n・connec+a community\n・オーダーメイドツアー\n\n第4章 メンバーの権利と義務\n第8条（役員への昇進）\n1. メンバーは、活動実績に応じて役員候補として推薦される場合があります。\n2. 代表及び副代表一名からの推薦のち、代表及び副代表三名全員が承認したのち昇進となります。\n3. 任期および公的な選任手続きに関しては、別途個人と相談になります。\n第9条（一時活動休止）\n1. メンバーが活動を一時的に休止する場合、事前に代表へ一報をするものとします。\n2. 活動復帰の手続きについても、代表の承認を要します。\n第10条（退会・除名）\n1. 退会を希望する場合、事前に代表へ一報をするものとします。\n2. メンバーが規約に違反した場合、除名の対象となることがあります。\n\n第5章 規約の変更および附則\n第11条（規約の改訂）\n1. 規約の改訂は、総会の承認をもって成立します。\n2. 改訂内容は速やかに全メンバーに通知されます。';
 var GRADES=['中学1年','中学2年','中学3年','高校1年','高校2年','高校3年','高専','大学1年','大学2年','大学3年','大学4年','大学院','専門学校','社会人','その他'];
 var MINORS=['中学1年','中学2年','中学3年','高校1年','高校2年','高校3年'];
 
@@ -206,9 +210,9 @@ function renderEntry(ctx){
       :'')+
 
     '<section class="sect"><h2><span class="no" id="agreeNo">03</span>同意事項</h2><div class="rule"></div>'+
-      '<label class="check"><input type="checkbox" id="f_terms"><span class="t">会員規約に同意します<span class="req" style="color:#c0392b;font-size:10.5px;margin-left:7px">必須</span><small>活動には対面およびオンラインでの交流が含まれます。</small></span></label>'+
-      '<label class="check"><input type="checkbox" id="f_privacy"><span class="t">個人情報の取り扱いに同意します<span class="req" style="color:#c0392b;font-size:10.5px;margin-left:7px">必須</span><small>取得した個人情報は、運営および連絡の目的にのみ利用します。</small></span></label>'+
-    '</section>'+
+      '<details class="termsbox"><summary>メンバーシップ規約（全文を読む）</summary><div class="consent">'+esc(TERMS_TEXT)+'</div></details>'+
+      '<label class="check"><input type="checkbox" id="f_terms"><span class="t">メンバーシップ規約に同意します<span class="req" style="color:#c0392b;font-size:10.5px;margin-left:7px">必須</span><small>上の「全文を読む」から規約をご確認ください。活動には対面およびオンラインでの交流が含まれます。</small></span></label>'+
+          '</section>'+
 
     '<div class="err" id="ferr"></div>'+
     '<button class="btn" id="fsubmit">入力内容を送信する</button>'+
@@ -233,14 +237,13 @@ function renderEntry(ctx){
     if(!grade)miss.push('学年');
     if(minor&&!el('f_gname').value.trim())miss.push('保護者氏名');
     if(minor&&!el('f_gmail').value.trim())miss.push('保護者メールアドレス');
-    if(!el('f_terms').checked)miss.push('会員規約への同意');
-    if(!el('f_privacy').checked)miss.push('個人情報の取り扱いへの同意');
+    if(!el('f_terms').checked)miss.push('メンバーシップ規約への同意');
     if(miss.length){e.textContent='未入力の項目があります: '+miss.join('・');e.classList.add('on');e.scrollIntoView({block:'center'});return}
     var p=Object.assign(linkFields(),{
       name:name,name_kana:el('f_kana').value.trim(),email:email,grade:grade,
       school_name:el('f_school').value.trim(),
       residence_prefecture:el('f_pref').value,
-      membership_terms_accepted:el('f_terms').checked,privacy_policy_accepted:el('f_privacy').checked,
+      membership_terms_accepted:el('f_terms').checked,
     });
     if(noIv){
       p.join_date=el('f_join').value;p.residence_country=el('f_country').value.trim();
