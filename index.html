@@ -3044,6 +3044,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   syncPublished();
   addEventListener('pageshow',function(e){if(e.persisted)syncPublished();});
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')syncPublished();});
+  setInterval(function(){if(document.visibilityState==='visible')syncPublished();},300000);   // 表示しっぱなしのタブにも5分毎に公開を届ける(未更新時は軽い版照会のみ)
   (function(){
     var pg=document.getElementById('dept-page');
     if(!pg)return;
