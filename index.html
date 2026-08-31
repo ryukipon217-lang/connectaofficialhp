@@ -303,6 +303,16 @@ svg{display:block}
 .ni-go{flex:none;color:var(--ink3);font-size:20px;transition:transform .22s,color .22s}
 .news-item:hover .ni-go{color:var(--blue);transform:translateX(3px)}
 @media(max-width:600px){.news-item{flex-wrap:wrap;gap:8px 12px;padding-right:26px}.ni-tt{flex:1 1 100%;order:3}.ni-go{position:absolute;right:6px;top:20px}}
+/* (SiteNews) 読み込みスケルトン+空状態 */
+.ni-skel{display:flex;align-items:center;gap:clamp(14px,2vw,26px);padding:22px 8px;border-top:1px solid var(--line)}
+.ni-skel:last-child{border-bottom:1px solid var(--line)}
+.ni-skel i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,#e8edf5 25%,#f3f6fb 50%,#e8edf5 75%);background-size:200% 100%;animation:skel 1.2s linear infinite}
+.ni-skel .s1{width:74px}.ni-skel .s2{width:56px}.ni-skel .s3{flex:1;max-width:420px}
+@keyframes skel{to{background-position:-200% 0}}
+@media (prefers-reduced-motion: reduce){.ni-skel i{animation:none}}
+.news-empty{padding:46px 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--ink3);font-size:14.5px;letter-spacing:.06em}
+.list-card .li.li-link{cursor:pointer}
+.list-card .li-empty{padding:26px 4px;color:var(--ink3);font-size:14px;letter-spacing:.06em}
 /* お知らせ 詳細 */
 .news-detail-view{text-align:left}
 .news-back{display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:8px 0;cursor:pointer;font-family:var(--gothic);font-weight:600;font-size:13.5px;color:var(--ink2);transition:color .2s}
@@ -3964,9 +3974,22 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     bindNewsItems();
     var nback=newsPage.querySelector('.news-back');
     if(nback)nback.addEventListener('click',function(){ndView.hidden=true;nlView.hidden=false;newsPage.scrollTop=0;});
-    // ライブ取得(コンソールの「公開サイト掲載」ONの記事のみが配信される)
+    // ライブ取得(コンソールの「公開サイト掲載」ONの記事のみが配信される)。
+    // 本番に架空のデモ記事を出さない: 初期表示はスケルトン→実データ描画/0件・失敗時は空状態。
     (function(){
       var GAS='https://script.google.com/macros/s/AKfycbxLs1eXm39MHM0lSioBf9ghVFL8p8fIhIdYJpBBweBTCLOFDqWclPhoF66c0FgfrbHg/exec';
+      var host=nlView.querySelector('.news-item')?nlView.querySelector('.news-item').parentElement:null;
+      var homeCard=document.querySelector('#news .list-card');
+      function skel(n){var r='';for(var i=0;i<n;i++)r+='<div class="ni-skel"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>';return r;}
+      if(host)host.innerHTML=skel(4);
+      if(homeCard)homeCard.innerHTML=skel(3);
+      var settled=false;
+      function showEmpty(){
+        if(settled)return;settled=true;
+        if(host)host.innerHTML='<div class="news-empty">ただいまお知らせはありません。</div>';
+        if(homeCard)homeCard.innerHTML='<div class="li-empty">お知らせは準備中です。</div>';
+      }
+      setTimeout(showEmpty,10000);   // 応答が返らない場合もスケルトンのまま放置しない
       function tagOf(cat){
         var c=String(cat||'');
         if(/イベント|event/i.test(c))return ['EVENT','t-event'];
@@ -3981,20 +4004,36 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         return dt.getFullYear()+'.'+('0'+(dt.getMonth()+1)).slice(-2)+'.'+('0'+dt.getDate()).slice(-2);
       }
       fetch(GAS+'?action=listSiteNews').then(function(r){return r.json();}).then(function(res){
-        var items=res&&res.ok&&Array.isArray(res.data)?res.data:null;
-        if(!items||!items.length)return;
-        var host=nlView.querySelector('.news-item')?nlView.querySelector('.news-item').parentElement:null;
-        if(!host)return;
-        host.innerHTML=items.map(function(n){
-          var tg=tagOf(n.category);
-          return '<a class="news-item" href="#" data-body="'+escH(n.body||'')+'" data-ctalink="'+escH(n.ctaLink||'')+'" data-ctatext="'+escH(n.ctaText||'')+'">'
-            +'<span class="ni-date">'+escH(fdate(n.publishedAt))+'</span>'
-            +'<span class="ni-tag '+tg[1]+'">'+escH(tg[0])+'</span>'
-            +'<span class="ni-tt">'+escH(n.title||'')+'</span>'
-            +'<span class="msym ni-go">arrow_forward</span></a>';
-        }).join('');
-        bindNewsItems();
-      }).catch(function(){});
+        var items=res&&res.ok&&Array.isArray(res.data)?res.data:[];
+        if(!items.length){showEmpty();return;}
+        if(settled)return;settled=true;
+        if(host){
+          host.innerHTML=items.map(function(n){
+            var tg=tagOf(n.category);
+            return '<a class="news-item" href="#" data-body="'+escH(n.body||'')+'" data-ctalink="'+escH(n.ctaLink||'')+'" data-ctatext="'+escH(n.ctaText||'')+'">'
+              +'<span class="ni-date">'+escH(fdate(n.publishedAt))+'</span>'
+              +'<span class="ni-tag '+tg[1]+'">'+escH(tg[0])+'</span>'
+              +'<span class="ni-tt">'+escH(n.title||'')+'</span>'
+              +'<span class="msym ni-go">arrow_forward</span></a>';
+          }).join('');
+          bindNewsItems();
+        }
+        if(homeCard){
+          homeCard.innerHTML=items.slice(0,3).map(function(n,i){
+            var tg=tagOf(n.category);
+            return '<div class="li li-link" data-ni="'+i+'" role="button" tabindex="0"><span class="date">'+escH(fdate(n.publishedAt))+'</span><span class="tag">'+escH(tg[0])+'</span><span class="tt">'+escH(n.title||'')+'</span><span class="go"><span class="msym">arrow_forward</span></span></div>';
+          }).join('');
+          homeCard.querySelectorAll('.li-link').forEach(function(li){
+            function openIt(){
+              ovOpen('news-page');
+              var it=newsPage.querySelectorAll('.news-item')[+li.getAttribute('data-ni')];
+              if(it)it.click();
+            }
+            li.addEventListener('click',openIt);
+            li.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openIt();}});
+          });
+        }
+      }).catch(showEmpty);
     })();
   }
 
