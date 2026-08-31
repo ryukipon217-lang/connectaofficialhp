@@ -896,9 +896,11 @@ body.editing .rg-mapfit.arm-add{cursor:crosshair;outline:2px dashed rgba(255,255
 .se-add{width:100%;background:rgba(46,107,230,.18);border:1px dashed rgba(120,155,240,.6);color:#b9caf7;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:4px}
 .se-add.on{background:#2e6be6;color:#fff;border-style:solid}
 .se-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.se-foot{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+.se-foot{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
 .se-foot button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:9px 4px;font-size:12px;font-weight:700;cursor:pointer}
 .se-foot .se-save{background:#2e6be6;border-color:#2e6be6}
+.se-foot .se-pub{background:#0f9d58;border-color:#0f9d58}
+.se-foot .se-pub[disabled]{opacity:.55;cursor:default}
 .se-status{padding:7px 14px;font-size:10.5px;color:#7fd6a7;min-height:24px;border-top:1px solid rgba(255,255,255,.08)}
 .se-note{font-size:10.5px;color:#8fa3d9;line-height:1.7;margin-top:6px}
 .se-pin-hd{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
@@ -2420,6 +2422,8 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
 
   // (Content) 地域ページ/部署/地図注釈を一元configから描画 — ?edit=1 の編集画面で全て変更可能
   var SITE_KEY='connectaSiteContent-v1';
+  var PUBKEY='connectaSitePub-v1';   // 公開済みコンテンツ(GAS配信)の端末キャッシュ {version,content}
+  var SITE_GAS='https://script.google.com/macros/s/AKfycbxLs1eXm39MHM0lSioBf9ghVFL8p8fIhIdYJpBBweBTCLOFDqWclPhoF66c0FgfrbHg/exec';
   var SITE_DEFAULT={
     regions:{
       kanto:{eyebrow:'TOKYO — KANTO TEAM',title:'東京・関東',lead:'首都圏を拠点に、日本語学校・施設と連携しながら、交流の最初の接点をつくるチーム。',
@@ -2532,29 +2536,30 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         link:'',linkLabel:''}
     }
   };
+  function _mergeSite(c,st){
+    if(!st)return;
+    if(st.regions)Object.keys(st.regions).forEach(function(k){c.regions[k]=st.regions[k];});
+    if(st.depts)Object.keys(st.depts).forEach(function(k){c.depts[k]=st.depts[k];});
+    if(st.org)c.org=st.org;
+    if(st.partners)Object.keys(st.partners).forEach(function(k){c.partners[k]=st.partners[k];});
+    if(st.pillars)Object.keys(st.pillars).forEach(function(k){c.pillars[k]=st.pillars[k];});
+    if(st.moments)c.moments=st.moments;
+    if(st.how)c.how=st.how;
+    if(st.nb)c.nb=st.nb;
+    if(st.about2)c.about2=st.about2;
+    if(st.voices)c.voices=st.voices;
+    if(st.disc)c.disc=st.disc;
+    if(st.swarm)c.swarm=st.swarm;
+    if(st.textOverrides)c.textOverrides=st.textOverrides;
+    if(st.textOffsets)c.textOffsets=st.textOffsets;
+    if(st.photos)c.photos=st.photos;
+  }
   function loadContent(){
     var c=JSON.parse(JSON.stringify(SITE_DEFAULT));
-    try{
-      var st=JSON.parse(localStorage.getItem(SITE_KEY)||'null');
-      if(st){
-        if(st.regions)Object.keys(st.regions).forEach(function(k){c.regions[k]=st.regions[k];});
-        if(st.depts)Object.keys(st.depts).forEach(function(k){c.depts[k]=st.depts[k];});
-        if(st.org)c.org=st.org;
-        if(st.partners)Object.keys(st.partners).forEach(function(k){c.partners[k]=st.partners[k];});
-        if(st.pillars)Object.keys(st.pillars).forEach(function(k){c.pillars[k]=st.pillars[k];});
-        if(st.moments)c.moments=st.moments;
-        if(st.how)c.how=st.how;
-        if(st.nb)c.nb=st.nb;
-        if(st.about2)c.about2=st.about2;
-        if(st.voices)c.voices=st.voices;
-        if(st.disc)c.disc=st.disc;
-        if(st.swarm)c.swarm=st.swarm;
-        if(st.textOverrides)c.textOverrides=st.textOverrides;
-        if(st.textOffsets)c.textOffsets=st.textOffsets;
-        if(st.photos)c.photos=st.photos;
-      }
-    delete c.depts.jigyo; // 旧「交流推進事業」一括りはIF/OM/CCへ分割済み
-    }catch(_e){}
+    // 公開済みコンテンツ(全端末共通・GASから取得しキャッシュ)→ この端末のローカル編集、の順で上書き
+    try{var pub=JSON.parse(localStorage.getItem(PUBKEY)||'null');if(pub&&pub.content)_mergeSite(c,pub.content);}catch(_e){}
+    try{_mergeSite(c,JSON.parse(localStorage.getItem(SITE_KEY)||'null'));}catch(_e){}
+    try{delete c.depts.jigyo;}catch(_e){} // 旧「交流推進事業」一括りはIF/OM/CCへ分割済み
     return c;
   }
   var CONTENT=loadContent();
@@ -2968,6 +2973,20 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   try{if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitStanza);}catch(_e){}
   addEventListener('resize',function(){clearTimeout(fitStanza._t);fitStanza._t=setTimeout(fitStanza,120);});
   try{matchMedia('(max-width:760px)').addEventListener('change',function(){renderSiteContent();});}catch(_e){}
+  // (SitePublish) 公開済みコンテンツの同期: キャッシュで即描画→裏でバージョン照会→更新があれば取得して再描画
+  (function(){
+    var cached=null;try{cached=JSON.parse(localStorage.getItem(PUBKEY)||'null')}catch(_e){}
+    var v=(cached&&cached.version)||0;
+    fetch(SITE_GAS+'?action=getSiteContent&params='+encodeURIComponent(JSON.stringify({ifVersion:v})))
+      .then(function(r){return r.json();})
+      .then(function(res){
+        var d=res&&res.ok&&res.data;
+        if(!d||d.unchanged)return;
+        if(d.content&&d.version){localStorage.setItem(PUBKEY,JSON.stringify({version:d.version,content:d.content}));}
+        else if(!d.version){localStorage.removeItem(PUBKEY);}
+        CONTENT=loadContent();renderSiteContent();
+      }).catch(function(){});
+  })();
   (function(){
     var pg=document.getElementById('dept-page');
     if(!pg)return;
@@ -3025,7 +3044,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       +'<div class="se-tabs" hidden><button data-tab="main"></button><button data-tab="kanto"></button><button data-tab="kansai"></button><button data-tab="depts"></button><button data-tab="pillars"></button><button data-tab="swarm"></button><button data-tab="moments"></button><button data-tab="partners"></button></div>'
       +'<div class="se-body"></div>'
       +'<div class="se-status"></div>'
-      +'<div class="se-foot"><button class="se-save" type="button">保存</button><button class="se-exp" type="button">書き出し</button><button class="se-reset" type="button">初期に戻す</button></div>';
+      +'<div class="se-foot"><button class="se-pub" type="button">公開</button><button class="se-save" type="button">保存</button><button class="se-exp" type="button">書き出し</button><button class="se-reset" type="button">初期に戻す</button></div>';
     document.body.appendChild(ed);
     var dl=document.createElement('datalist');dl.id='sePhotos';
     ['louie-martinez-IocJwyqRv3M-unsplash.jpg','pichai-sodsai-E_JLhd4yIKI-unsplash.jpg','jeremy-santana-7_puF4jioPo-unsplash.jpg','su-san-lee-E_eWwM29wfU-unsplash.jpg','steven-he-Y5JbvpVX1cw-unsplash.jpg','yu-kato-824OwkP7sgk-unsplash.jpg','syuhei-inoue-kaoHI0iHJPM-unsplash.jpg','shinjuku-o-guard_large.jpg','nishi-shinjuku-intersection-2_large.jpg','coco-event.jpg','map-kanto.png','map-kansai.png'].forEach(function(f){var o=document.createElement('option');o.value=f;dl.appendChild(o);});
@@ -3046,6 +3065,42 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     });
     syncMobTg();
     ed.querySelector('.se-save').addEventListener('click',function(){persist('保存しました');});
+    // 「公開」= CONTENT を GAS に保存し全端末へ配信(consoleと同じアカウントでログイン・マネージャー以上)
+    var ADMKEY='connectaSiteAdmin-v1';
+    var pubBtn=ed.querySelector('.se-pub');
+    function _pubSession(){try{var s=JSON.parse(localStorage.getItem(ADMKEY)||'null');return (s&&s.memberId&&s.token)?s:null}catch(e){return null}}
+    function _pubLogin(cb){
+      var s=_pubSession();if(s)return cb(s);
+      var em=prompt('公開には運営アカウント(コンソールと同じ)でのログインが必要です。\nメールアドレス:');if(!em)return;
+      var pw=prompt('パスワード:');if(!pw)return;
+      setStatus('ログインしています…');
+      fetch(SITE_GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'authenticate',payload:{identifier:em.trim(),password:pw}})})
+        .then(function(r){return r.json();}).then(function(r){
+          var d=(r&&r.data)||r||{};
+          if(!d.token){throw new Error((d&&d.error)||(r&&r.error)||'ログインに失敗しました');}
+          var u=d.user||{};
+          var sess={memberId:(u.member&&u.member.id)||u.memberId||'',token:d.token,name:(u.member&&u.member.name)||''};
+          localStorage.setItem(ADMKEY,JSON.stringify(sess));
+          cb(sess);
+        }).catch(function(e){setStatus('⚠ '+String(e&&e.message||e));});
+    }
+    pubBtn.addEventListener('click',function(){
+      var size=0;try{size=JSON.stringify(CONTENT).length}catch(e){}
+      if(size>6*1024*1024){setStatus('⚠ データが大きすぎます(写真を減らすか「書き出し」でJSONをお渡しください)');return}
+      if(!confirm('現在の編集内容をサイトに公開します。全ての端末に反映されます。よろしいですか？'))return;
+      _pubLogin(function(sess){
+        pubBtn.disabled=true;pubBtn.textContent='公開中…';setStatus('公開しています…');
+        fetch(SITE_GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveSiteContent',payload:{content:CONTENT},memberId:sess.memberId,token:sess.token})})
+          .then(function(r){return r.json();}).then(function(res){
+            pubBtn.disabled=false;pubBtn.textContent='公開';
+            if(res&&res.unauthorized){localStorage.removeItem(ADMKEY);setStatus('⚠ ログインの有効期限が切れました。もう一度「公開」を押してください');return}
+            if(!res||!res.ok)throw new Error((res&&res.error)||'公開に失敗しました');
+            var ver=res.data&&res.data.version;
+            try{localStorage.setItem(PUBKEY,JSON.stringify({version:ver,content:JSON.parse(JSON.stringify(CONTENT))}))}catch(e){}
+            setStatus('公開しました ✓ 全端末に反映されます(開いている端末は次の読み込みで更新)');
+          }).catch(function(e){pubBtn.disabled=false;pubBtn.textContent='公開';setStatus('⚠ '+String(e&&e.message||e));});
+      });
+    });
     ed.querySelector('.se-exp').addEventListener('click',function(){
       var blob=new Blob([JSON.stringify(CONTENT,null,2)],{type:'application/json'});
       var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='connecta-site-content.json';a.click();
@@ -4003,7 +4058,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     // ライブ取得(コンソールの「公開サイト掲載」ONの記事のみが配信される)。
     // 本番に架空のデモ記事を出さない: 初期表示はスケルトン→実データ描画/0件・失敗時は空状態。
     (function(){
-      var GAS='https://script.google.com/macros/s/AKfycbxLs1eXm39MHM0lSioBf9ghVFL8p8fIhIdYJpBBweBTCLOFDqWclPhoF66c0FgfrbHg/exec';
+      var GAS=SITE_GAS;
       var host=nlView.querySelector('.news-item')?nlView.querySelector('.news-item').parentElement:null;
       var homeCard=document.querySelector('#news .list-card');
       function skel(n){var r='';for(var i=0;i<n;i++)r+='<div class="ni-skel"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>';return r;}
