@@ -150,14 +150,14 @@ function renderState(kind,title,lines,sub){
 
 function linkFields(){return {appId:LINK.appId,purpose:LINK.purpose,exp:LINK.exp,sig:LINK.sig}}
 
-/* ============ 面談なし採用: 一括入力フォーム ============ */
+/* ============ エントリーなし採用(面談あり): 基本情報フォーム → 面談予約案内 ============ */
 function renderEntry(ctx){
   var preset=ctx.presetDept||null;
   el('app').innerHTML=
   '<main class="wrap reveal" id="rv">'+
     '<p class="eyebrow">Member Entry</p>'+
-    '<h1 class="title">メンバー登録のご案内</h1>'+
-    '<p class="lede">'+esc(ctx.candidateName||'')+'様の connec+a メンバー登録フォームです。ご入力が完了すると、登録手続きは自動で進みます。<br>このリンクには有効期限があります。お早めのご入力をお願いします。</p>'+
+    '<h1 class="title">基本情報のご入力</h1>'+
+    '<p class="lede">'+esc(ctx.candidateName||'')+'様の connec+a ご参加手続きフォームです。ご入力のあと、代表との面談の日程予約へご案内します。<br>このリンクには有効期限があります。お早めのご入力をお願いします。</p>'+
 
     '<section class="sect"><h2><span class="no">01</span>基本情報</h2><div class="rule"></div>'+
       '<div class="grid2">'+
@@ -172,32 +172,14 @@ function renderEntry(ctx){
     '</section>'+
 
     '<section class="sect"><h2><span class="no">02</span>活動について</h2><div class="rule"></div>'+
-      '<div class="grid2">'+
       '<div class="fld"><label>在住都道府県<span class="opt">任意</span></label><select id="f_pref">'+opts(PREFS)+'</select></div>'+
-      '<div class="fld"><label>在住国<span class="opt">任意</span></label><input type="text" id="f_country" value="日本"></div>'+
-      '</div>'+
-      '<div class="grid2">'+
-      '<div class="fld"><label>参加開始月<span class="opt">任意</span></label><input type="month" id="f_join"></div>'+
-      '<div class="fld"><label>緊急連絡先<span class="opt">任意</span></label><input type="tel" id="f_emg" placeholder="電話番号など"></div>'+
-      '</div>'+
-      '<label class="check"><input type="checkbox" id="f_remote"><span class="t">フルリモートでの参加を希望する<small>対面イベントへの参加が難しい場合もオンラインで活動できます。</small></span></label>'+
       (preset
         ?'<div class="fld"><label>所属部署</label><div class="fixedval">'+esc(preset.name)+((ctx.presetSubDepts&&ctx.presetSubDepts.length)?'（兼任: '+esc(ctx.presetSubDepts.map(function(x){return x.name}).join('、'))+'）':'')+'<small>運営にて決定済みの所属です。</small></div></div>'
-        :'<div class="fld"><label>希望部署<span class="opt">任意</span></label><select id="f_dept">'+opts(ctx.departments||[])+'</select><div class="hint">未定のままでも送信できます。その場合は運営にて確認のうえ決定します。</div></div>')+
+        :'<div class="fld"><label>希望部署<span class="opt">任意</span></label><select id="f_dept">'+opts(ctx.departments||[])+'</select><div class="hint">未定のままでも送信できます。面談でご相談のうえ決定します。</div></div>')+
+      '<p class="lede" style="font-size:13px;margin:8px 0 0">参加開始時期などの詳細は、面談ののち正式なお手続きの際にお伺いします。</p>'+
     '</section>'+
 
-    '<section class="sect" id="gsect" style="display:none"><h2><span class="no">03</span>保護者の方の同意</h2><div class="rule"></div>'+
-      '<div class="gbox">'+
-        '<p class="gh">未成年（高校生以下）の方は保護者の同意が必要です</p>'+
-        '<p class="gp">ご入力いただいた保護者の方のメールアドレス宛に、同意確認のご案内を自動でお送りします。保護者の方の同意が確認でき次第、登録が完了します。</p>'+
-        '<div class="grid2">'+
-        '<div class="fld"><label>保護者氏名<span class="req">必須</span></label><input type="text" id="f_gname"></div>'+
-        '<div class="fld"><label>保護者メールアドレス<span class="req">必須</span></label><input type="email" id="f_gmail" placeholder="parent@gmail.com"></div>'+
-        '</div>'+
-      '</div>'+
-    '</section>'+
-
-    '<section class="sect"><h2><span class="no" id="agreeNo">03</span>同意事項</h2><div class="rule"></div>'+
+    '<section class="sect"><h2><span class="no">03</span>同意事項</h2><div class="rule"></div>'+
       '<label class="check"><input type="checkbox" id="f_terms"><span class="t">会員規約に同意します<span class="req" style="color:#c0392b;font-size:10.5px;margin-left:7px">必須</span><small>活動には対面およびオンラインでの交流が含まれます。</small></span></label>'+
       '<label class="check"><input type="checkbox" id="f_privacy"><span class="t">個人情報の取り扱いに同意します<span class="req" style="color:#c0392b;font-size:10.5px;margin-left:7px">必須</span><small>取得した個人情報は、運営および連絡の目的にのみ利用します。</small></span></label>'+
     '</section>'+
@@ -207,39 +189,30 @@ function renderEntry(ctx){
   '</main>';
   requestAnimationFrame(function(){var rv=el('rv');if(rv)rv.classList.add('on')});
 
-  el('f_grade').addEventListener('change',function(){
-    var minor=MINORS.indexOf(this.value)>=0;
-    el('gsect').style.display=minor?'':'none';
-    el('agreeNo').textContent=minor?'04':'03';
-  });
-
   el('fsubmit').addEventListener('click',async function(){
     var e=el('ferr');e.classList.remove('on');
     var name=el('f_name').value.trim(),email=el('f_email').value.trim(),grade=el('f_grade').value;
-    var minor=MINORS.indexOf(grade)>=0;
     var miss=[];
     if(!name)miss.push('氏名');
     if(!email)miss.push('メールアドレス');
     if(!grade)miss.push('学年');
-    if(minor&&!el('f_gname').value.trim())miss.push('保護者氏名');
-    if(minor&&!el('f_gmail').value.trim())miss.push('保護者メールアドレス');
     if(!el('f_terms').checked)miss.push('会員規約への同意');
     if(!el('f_privacy').checked)miss.push('個人情報の取り扱いへの同意');
     if(miss.length){e.textContent='未入力の項目があります: '+miss.join('・');e.classList.add('on');e.scrollIntoView({block:'center'});return}
     var p=Object.assign(linkFields(),{
       name:name,name_kana:el('f_kana').value.trim(),email:email,grade:grade,
-      school_name:el('f_school').value.trim(),join_date:el('f_join').value,
-      residence_prefecture:el('f_pref').value,residence_country:el('f_country').value.trim(),
-      remote_available:el('f_remote').checked,emergency_contact:el('f_emg').value.trim(),
+      school_name:el('f_school').value.trim(),
+      residence_prefecture:el('f_pref').value,
       membership_terms_accepted:el('f_terms').checked,privacy_policy_accepted:el('f_privacy').checked,
-      guardian_name:minor?el('f_gname').value.trim():'',guardian_email:minor?el('f_gmail').value.trim():'',
     });
     var d=el('f_dept');if(d&&d.value)p.deptId=d.value;
     var btn=this;btn.disabled=true;btn.textContent='送信しています…';
     try{
       var r=await apiPost('submitDirectEntry',p);
       if(r&&r.ok===false)throw new Error(r.error||'送信できませんでした');
-      if(r&&r.guardianRequired){
+      if(r&&r.interviewNext){
+        renderInterviewNext(name);
+      }else if(r&&r.guardianRequired){   // 旧(面談なし)リンク互換
         renderState('ok','ご入力ありがとうございました',
           ['基本情報のご入力を受け付けました。','保護者の方のメールアドレス宛に、同意確認のご案内をお送りしました。','保護者の方の同意が確認でき次第、登録が完了します。'],
           'メールが届かない場合は、迷惑メールフォルダのご確認をお願いします。');
@@ -254,6 +227,19 @@ function renderEntry(ctx){
       e.textContent=String(ex&&ex.message||ex);e.classList.add('on');e.scrollIntoView({block:'center'});
     }
   });
+}
+
+/* 送信完了 → 代表面談の日程予約へ案内 */
+function renderInterviewNext(name){
+  el('app').innerHTML=
+  '<div class="state">'+
+    '<div class="mark ok"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5.2 5.2L20 6.8" stroke="#3f8a3f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+    '<h1>ご入力ありがとうございました</h1>'+
+    '<p>'+esc(name||'')+'様の基本情報を受け付けました。</p>'+
+    '<p>続いて、<b>代表との面談（オンライン可・30分程度）</b>の日程をご予約ください。</p>'+
+    '<p style="margin:22px 0"><a class="btn" style="display:inline-block;text-decoration:none;text-align:center" href="https://calendar.app.google/NRszP9atBtVoqN5Y6" target="_blank" rel="noopener">面談日程を予約する（Googleカレンダー）</a></p>'+
+    '<p class="sub">ご予約の確認後、運営から面談のご案内（Zoomリンク等）をメールでお送りします。<br>ご都合の合う日程がない場合は、このメールに返信する形でお気軽にご相談ください。</p>'+
+  '</div>';
 }
 
 /* ============ 保護者同意フォーム ============ */
