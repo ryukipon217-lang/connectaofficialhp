@@ -306,6 +306,10 @@ body.ap-lock .fab-recruit,body.editing .fab-recruit{opacity:0;pointer-events:non
 .ap-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:none;border:0;padding:16px 2px;cursor:pointer;text-align:left;color:var(--ink);font-family:var(--gothic);font-weight:600;font-size:14.5px;letter-spacing:.01em;transition:color .2s}
 .ap-q:hover{color:var(--blue)}
 .ap-q-t em{font-style:normal;font-size:11px;color:var(--ink3);margin-left:8px;font-weight:500}
+.ap-q-more{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.08em;color:var(--ink3);white-space:nowrap;transition:color .2s}
+.ap-q:hover .ap-q-more{color:var(--blue)}
+.ap-chev2{font-size:17px;color:var(--blue);transition:transform .2s}
+.ap-q:hover .ap-chev2{transform:translateX(3px)}
 .ap-chev{font-size:21px;color:var(--blue);flex:none;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
 .ap-item.open .ap-chev{transform:rotate(135deg)}
 .ap-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
@@ -2068,9 +2072,9 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
         <h3>東京・関東</h3>
         <p class="ap-lead">首都圏を拠点に、つながりの輪を広げる。</p>
         <div class="ap-acc">
-          <div class="ap-item"><button class="ap-q" type="button" aria-expanded="false"><span class="ap-q-t">International Friendship Tour Tokyo</span><span class="msym ap-chev">add</span></button><div class="ap-a"><div class="ap-a-in"><p>詳細は準備中です。</p></div></div></div>
-          <div class="ap-item"><button class="ap-q" type="button" aria-expanded="false"><span class="ap-q-t">Ordermade Tokyo</span><span class="msym ap-chev">add</span></button><div class="ap-a"><div class="ap-a-in"><p>詳細は準備中です。</p></div></div></div>
-          <div class="ap-item"><button class="ap-q" type="button" aria-expanded="false"><span class="ap-q-t">Co-creation lab</span><span class="msym ap-chev">add</span></button><div class="ap-a"><div class="ap-a-in"><p>詳細は準備中です。</p></div></div></div>
+          <div class="ap-item"><button class="ap-q" type="button" data-dept="International Friendship Tour Tokyo"><span class="ap-q-t">International Friendship Tour Tokyo</span><span class="ap-q-more">詳細を見る<span class="msym ap-chev2">arrow_forward</span></span></button></div>
+          <div class="ap-item"><button class="ap-q" type="button" data-dept="Ordermade Tokyo"><span class="ap-q-t">Ordermade Tokyo</span><span class="ap-q-more">詳細を見る<span class="msym ap-chev2">arrow_forward</span></span></button></div>
+          <div class="ap-item"><button class="ap-q" type="button" data-dept="Co-creation lab"><span class="ap-q-t">Co-creation lab</span><span class="ap-q-more">詳細を見る<span class="msym ap-chev2">arrow_forward</span></span></button></div>
         </div>
         <a class="hd-more ap-more" href="#region-kanto" data-morph="region-kanto" data-morph-origin=".ap-tokyo .ap-circle">詳細を見る<span class="msym">arrow_forward</span></a>
       </div></div>
@@ -2082,8 +2086,8 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
         <h3>大阪・関西</h3>
         <p class="ap-lead">関西を拠点に、出会いと共創の場を広げる。</p>
         <div class="ap-acc">
-          <div class="ap-item"><button class="ap-q" type="button" aria-expanded="false"><span class="ap-q-t">International Friendship Tour Osaka</span><span class="msym ap-chev">add</span></button><div class="ap-a"><div class="ap-a-in"><p>詳細は準備中です。</p></div></div></div>
-          <div class="ap-item"><button class="ap-q" type="button" aria-expanded="false"><span class="ap-q-t">Ordermade Osaka <em>構想中</em></span><span class="msym ap-chev">add</span></button><div class="ap-a"><div class="ap-a-in"><p>詳細は準備中です。</p></div></div></div>
+          <div class="ap-item"><button class="ap-q" type="button" data-dept="International Friendship Tour Osaka"><span class="ap-q-t">International Friendship Tour Osaka</span><span class="ap-q-more">詳細を見る<span class="msym ap-chev2">arrow_forward</span></span></button></div>
+          <div class="ap-item"><button class="ap-q" type="button" data-dept="Ordermade"><span class="ap-q-t">Ordermade Osaka <em>構想中</em></span><span class="ap-q-more">詳細を見る<span class="msym ap-chev2">arrow_forward</span></span></button></div>
         </div>
         <a class="hd-more ap-more" href="#region-kansai" data-morph="region-kansai" data-morph-origin=".ap-osaka .ap-circle">詳細を見る<span class="msym">arrow_forward</span></a>
       </div></div>
@@ -4076,8 +4080,23 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   if(mobnav){var mc=mobnav.querySelector('.mobnav-close');if(mc)mc.addEventListener('click',mnClose);
     mobnav.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){setTimeout(mnClose,10);});});}
   addEventListener('keydown',function(e){if(e.key==='Escape'){ovCloseAll();mnClose();}});
-  // program accordions (details 折りたたみ)
-  document.querySelectorAll('.ap-q').forEach(function(q){q.addEventListener('click',function(){var item=q.closest('.ap-item');var open=item.classList.toggle('open');q.setAttribute('aria-expanded',open?'true':'false');});});
+  // program accordions (details 折りたたみ) / data-dept付きは部署詳細へジャンプ
+  //   ※resolveDeptKeyはTokyo/Osakaを除去して丸めるため、ここでは「除去しない完全一致→包含」の順で
+  //     照合し、IF Osaka(en=International Friendship Tour Osaka)がIF Tokyoに吸われないようにする
+  function deptKeyExact(alias){
+    var n=function(t){return String(t||'').toLowerCase().replace(/\s+/g,'');};
+    var a=n(alias),ks=Object.keys(CONTENT.depts);
+    for(var i=0;i<ks.length;i++){var d=CONTENT.depts[ks[i]];if(n(d.name)===a||n(d.en)===a)return ks[i];}
+    for(var i=0;i<ks.length;i++){var d=CONTENT.depts[ks[i]];var nm=n(d.name),e=n(d.en);
+      if(nm&&nm.length>=2&&(a.indexOf(nm)>-1||nm.indexOf(a)>-1))return ks[i];
+      if(e&&e.length>=2&&(a.indexOf(e)>-1||e.indexOf(a)>-1))return ks[i];}
+    return resolveDeptKey(alias);
+  }
+  document.querySelectorAll('.ap-q').forEach(function(q){q.addEventListener('click',function(){
+    var alias=q.getAttribute('data-dept');
+    if(alias){var k=deptKeyExact(alias);ovOpen('dept-page');if(k)showDept(k);return;}
+    var item=q.closest('.ap-item');var open=item.classList.toggle('open');q.setAttribute('aria-expanded',open?'true':'false');
+  });});
   // 採用エントリー(2ステップ・site.html内完結／面接日程だけ外部カレンダー)
   var entryForm=document.getElementById('entryForm');
   if(entryForm){
