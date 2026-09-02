@@ -4119,17 +4119,40 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         rec=document.getElementById('rec-entry');
     function setStep(n){bars.forEach(function(b){b.classList.toggle('on', +b.getAttribute('data-s')<=n);});}
     function toRec(pos){if(rec)rec.scrollIntoView({behavior:'smooth',block:pos||'start'});}
-    // 応募をバックエンド(採用管理)へ登録してからSTEP2(日程登録)へ進む。失敗時は進めず案内(データ喪失防止)。
+    // 応募をバックエンド(採用管理)へ登録。体感速度のため送信は"裏"で実行し、画面はすぐStep2(日程調整の案内)へ進める。
+    // データ喪失/偽完了は防止:登録が確定するまで「エントリーを完了する」をブロックし、失敗時は再送導線を出す。
     var EGAS='https://script.google.com/macros/s/AKfycbxLs1eXm39MHM0lSioBf9ghVFL8p8fIhIdYJpBBweBTCLOFDqWclPhoF66c0FgfrbHg/exec';
-    var efErr=document.createElement('p');
-    efErr.style.cssText='display:none;color:#b0453e;background:#fdf4f3;border:1px solid #e6c3c3;border-radius:10px;padding:10px 14px;font-size:12.5px;margin:12px 0 0;line-height:1.7;text-align:left';
-    var efSub=entryForm.querySelector('.ef-submit'); if(efSub)efSub.appendChild(efErr);
-    var entrySubmitted=false;
+    // Step2上部の登録ステータス(裏送信の進捗/失敗を示す)
+    var s2Stat=document.createElement('div');
+    s2Stat.style.cssText='display:none;border-radius:12px;padding:11px 14px;font-size:12.5px;line-height:1.7;margin:0 0 16px;text-align:left';
+    if(step2)step2.insertBefore(s2Stat, step2.firstChild);
+    function s2Pending(){s2Stat.style.display='block';s2Stat.style.color='#5a6b8c';s2Stat.style.background='#f2f5fb';s2Stat.style.border='1px solid #d6e0f0';s2Stat.innerHTML='<span class="msym" style="vertical-align:-3px;font-size:17px">sync</span> エントリー内容を登録しています…（このまま日程調整にお進みいただけます）';}
+    function s2Ok(){s2Stat.style.display='none';}
+    function s2Err(msg){s2Stat.style.display='block';s2Stat.style.color='#b0453e';s2Stat.style.background='#fdf4f3';s2Stat.style.border='1px solid #e6c3c3';s2Stat.innerHTML='';var t=document.createElement('span');t.textContent='エントリー内容を登録できませんでした（'+msg+'）。通信環境をご確認のうえ、再送信してください。';s2Stat.appendChild(t);s2Stat.appendChild(document.createElement('br'));var rb=document.createElement('button');rb.type='button';rb.className='linkbtn';rb.style.marginTop='6px';rb.innerHTML='<span class="msym">refresh</span>再送信する';rb.addEventListener('click',function(){if(lastPayload)doSubmit(lastPayload);});s2Stat.appendChild(rb);}
+
+    var submitState='idle';   // idle | pending | done | error
+    var lastPayload=null, pendingComplete=false;
+    function finishEntry(){step2.hidden=true; if(done)done.hidden=false; toRec('center');}
+    function doSubmit(payload){
+      submitState='pending'; s2Pending();
+      return fetch(EGAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'createRecruitApplication',payload:payload})})
+        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+        .then(function(j){
+          if(!j||!j.ok||!j.data||j.data.ok===false)throw new Error((j&&(j.error||(j.data&&j.data.error)))||'送信に失敗しました');
+          submitState='done'; s2Ok();
+          if(pendingComplete){pendingComplete=false; finishEntry();}
+        })
+        .catch(function(ex){
+          submitState='error'; s2Err(String(ex&&ex.message||ex));
+          pendingComplete=false;
+        });
+    }
     entryForm.addEventListener('submit',function(e){e.preventDefault();
       var nm=entryForm.querySelector('[name=name]'), em=entryForm.querySelector('[name=email]'), mo=entryForm.querySelector('[name=motive]'), ok=true, first=null;
       [[nm,!!nm.value.trim()],[em,/.+@.+\..+/.test(em.value)],[mo,!!mo.value.trim()]].forEach(function(p){if(!p[1]){p[0].classList.add('err');ok=false;if(!first)first=p[0];}else p[0].classList.remove('err');});
       if(!ok){if(first)first.focus();return;}
-      if(entrySubmitted){entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start'); return;}   // 戻る→再送で二重登録しない
+      // 既に送信成功/送信中なら二重送信せず、そのままStep2へ
+      if(submitState==='done'||submitState==='pending'){entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start'); return;}
       var v=function(n){var f=entryForm.querySelector('[name='+n+']');return f?String(f.value||'').trim():''};
       var posBtn=posChips&&posChips.querySelector('.ef-chip.on');
       var extra=[];
@@ -4137,27 +4160,27 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       if(v('activity'))extra.push('【現在の活動】'+v('activity'));
       if(v('tel'))extra.push('【電話】'+v('tel'));
       if(v('city'))extra.push('【市区町村】'+v('city'));
-      var btn=entryForm.querySelector('.ef-submit .pill'), bt=btn.innerHTML;
-      btn.disabled=true; btn.textContent='送信しています…'; efErr.style.display='none';
-      fetch(EGAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'createRecruitApplication',payload:{
+      lastPayload={
         name:nm.value.trim(), name_kana:v('kana'), email:em.value.trim(), affiliation:v('affil'),
         residence_prefecture:v('pref'), desired_department_ids:posBtn?[posBtn.getAttribute('data-pos')]:[],
         desired_department_reason:mo.value.trim(), pre_interview_questions:extra.join('\n')
-      }})}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(j){
-        if(!j||!j.ok||!j.data||j.data.ok===false)throw new Error((j&&(j.error||(j.data&&j.data.error)))||'送信に失敗しました');
-        entrySubmitted=true;
-        btn.disabled=false; btn.innerHTML=bt;
-        entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start');   // 自動でリンクは開かない(Step2のボタンから手動)
-      }).catch(function(ex){
-        btn.disabled=false; btn.innerHTML=bt;
-        efErr.textContent='送信できませんでした（'+String(ex&&ex.message||ex)+'）。通信環境をご確認のうえ、もう一度お試しください。';
-        efErr.style.display='block';
-      });
+      };
+      // 楽観的に即Step2へ進め、送信は裏で実行(体感ゼロ化)
+      entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start');
+      doSubmit(lastPayload);
     });
     var back=document.getElementById('entryBack');
     if(back)back.addEventListener('click',function(){step2.hidden=true; entryForm.hidden=false; setStep(1); toRec('start');});
     var comp=document.getElementById('entryComplete');
-    if(comp)comp.addEventListener('click',function(){step2.hidden=true; if(done)done.hidden=false; toRec('center');});
+    if(comp)comp.addEventListener('click',function(){
+      if(submitState==='done'){finishEntry(); return;}   // 登録確定済み→そのまま完了
+      // 未確定:完了を予約し、失敗していれば再送。登録成功時に自動で完了画面へ。
+      var b=comp, bt=b.innerHTML; b.disabled=true; b.textContent='登録を確認しています…';
+      var restore=function(){b.disabled=false; b.innerHTML=bt;};
+      pendingComplete=true;
+      if(submitState==='error'&&lastPayload){doSubmit(lastPayload).then(function(){if(submitState!=='done')restore();});}
+      else{var iv=setInterval(function(){if(submitState!=='pending'){clearInterval(iv); if(submitState!=='done')restore();}},200);}
+    });
   }
   // お知らせ 一覧→詳細 (SiteNews: GASから公開記事を取得。失敗/空なら静的デモのまま)
   var newsPage=document.getElementById('news-page');
