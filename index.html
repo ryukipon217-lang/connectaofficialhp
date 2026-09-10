@@ -4385,5 +4385,13 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
   }
 })();
 </script>
+<script>
+/* 画像・アイコン常駐キャッシュ(sw.js)。非対応/失敗時は従来通りの読み込み */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
 </body>
 </html>
