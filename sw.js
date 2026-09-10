@@ -41,7 +41,8 @@ var PRECACHE_IMAGES = [
   '/content-photos/moments-a-0-1.jpg',
   '/content-photos/moments-a-4-1.jpg',
   '/content-photos/pillars-koryu-dial.jpg',
-  '/content-photos/regions-kanto-pins-1.jpg'
+  '/content-photos/regions-kanto-pins-1.jpg',
+  '/content-photos/pub3-4e4640c9.jpg'
 ];
 
 self.addEventListener('install', function (e) {
