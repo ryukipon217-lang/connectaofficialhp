@@ -1,3 +1,61 @@
+# connec+a 公開サイト（採用・団体紹介）
+# 通常の検索エンジンは許可（採用/広報のため索引されたい）。
+# AI / 学習 / スクレイピング系クローラのみ拒否する。
+
+# --- AI / 学習 / スクレイピング系クローラを拒否 ---
+User-agent: GPTBot
+Disallow: /
+User-agent: OAI-SearchBot
+Disallow: /
+User-agent: ChatGPT-User
+Disallow: /
+User-agent: ClaudeBot
+Disallow: /
+User-agent: Claude-Web
+Disallow: /
+User-agent: Claude-SearchBot
+Disallow: /
+User-agent: anthropic-ai
+Disallow: /
+User-agent: Google-Extended
+Disallow: /
+User-agent: Googlebot-Extended
+Disallow: /
+User-agent: CCBot
+Disallow: /
+User-agent: PerplexityBot
+Disallow: /
+User-agent: Perplexity-User
+Disallow: /
+User-agent: Bytespider
+Disallow: /
+User-agent: Amazonbot
+Disallow: /
+User-agent: Applebot-Extended
+Disallow: /
+User-agent: Meta-ExternalAgent
+Disallow: /
+User-agent: meta-externalagent
+Disallow: /
+User-agent: FacebookBot
+Disallow: /
+User-agent: cohere-ai
+Disallow: /
+User-agent: Diffbot
+Disallow: /
+User-agent: Omgilibot
+Disallow: /
+User-agent: ImagesiftBot
+Disallow: /
+User-agent: Timpibot
+Disallow: /
+User-agent: YouBot
+Disallow: /
+User-agent: DuckAssistBot
+Disallow: /
+
+# --- 通常の検索エンジンは許可（採用/広報のため）---
 User-agent: *
 Allow: /
+
 Sitemap: https://connectaofficialhp.connectahubapp.com/sitemap.xml
