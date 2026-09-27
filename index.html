@@ -366,6 +366,9 @@ body.ap-lock .fab-recruit,body.editing .fab-recruit{opacity:0;pointer-events:non
 .nd-title{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3.2vw,32px);letter-spacing:.04em;line-height:1.55;margin:0 0 clamp(26px,3.4vw,38px);color:var(--ink);padding-bottom:clamp(24px,3vw,32px);border-bottom:1px solid var(--line)}
 .nd-body{font-size:15px;color:var(--ink2);line-height:2.1}
 .nd-body p{margin:0 0 20px}
+/* (2026-09-27) 本文中のリンク。既定の青リンクだとこの配色から浮くのでサイトの青に合わせる。 */
+.nd-body a{color:var(--blue);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+.nd-body a:hover{opacity:.78}
 .news-detail-view .ap-foot{padding-left:0;padding-right:0;text-align:center}
 /* 採用情報 page */
 .rec-why{display:flex;gap:clamp(16px,2.2vw,28px);justify-content:center;margin-top:clamp(38px,5vw,62px);flex-wrap:wrap;text-align:left}
@@ -4185,6 +4188,27 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       else{var iv=setInterval(function(){if(submitState!=='pending'){clearInterval(iv); if(submitState!=='done')restore();}},200);}
     });
   }
+  /* (2026-09-27) お知らせ本文のリンク化。参加者アプリと同じ3つの書き方を受け取る:
+     [表示名](URL) / 裸のURL(http(s)://) / www. 始まり。アプリ内リンク(#/…)はHPには出さない。
+     必ず escH を通してから <a> を組み立てる(本文はコンソール入力＝HTMLを素通ししない)。 */
+  function nlLinkify(t){
+    var re=/\[([^\]\n]{1,120})\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)|(^|[^A-Za-z0-9@\/._-])(www\.[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+[^\s<]*)/g;
+    var TRAIL=/[)\].,!?:;。、）】」』]+$/;
+    var out='',last=0,m;
+    while((m=re.exec(t))!==null){
+      out+=escH(t.slice(last,m.index));
+      if(m[1]!=null){
+        out+='<a href="'+escH(m[2])+'" target="_blank" rel="noopener">'+escH(m[1])+'</a>';
+      }else{
+        var bare=(m[3]!=null), url=bare?m[3]:m[5], trail='';
+        if(!bare&&m[4])out+=escH(m[4]);
+        var tm=url.match(TRAIL); if(tm){trail=tm[0];url=url.slice(0,-trail.length);}
+        out+='<a href="'+escH(bare?url:('https://'+url))+'" target="_blank" rel="noopener">'+escH(url)+'</a>'+escH(trail);
+      }
+      last=re.lastIndex;
+    }
+    return out+escH(t.slice(last));
+  }
   // お知らせ 一覧→詳細 (SiteNews: GASから公開記事を取得。失敗/空なら静的デモのまま)
   var newsPage=document.getElementById('news-page');
   if(newsPage){
@@ -4197,7 +4221,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
           ndView.querySelector('.nd-date').textContent=it.querySelector('.ni-date').textContent;
           var dt=ndView.querySelector('.nd-tag'); dt.textContent=tg.textContent; dt.className='nd-tag ni-tag '+((tg.className.match(/t-[a-z]+/)||[''])[0]);
           ndView.querySelector('.nd-title').textContent=it.querySelector('.ni-tt').textContent;
-          var bodyHtml=(it.getAttribute('data-body')||'本文は準備中です。').split('\n').map(function(p){return '<p>'+escH(p)+'</p>';}).join('');
+          var bodyHtml=(it.getAttribute('data-body')||'本文は準備中です。').split('\n').map(function(p){return '<p>'+nlLinkify(p)+'</p>';}).join('');
           var cl=it.getAttribute('data-ctalink'), ct=it.getAttribute('data-ctatext');
           if(cl&&!/^#\//.test(cl))bodyHtml+='<p style="margin-top:22px"><a class="pill sm" href="'+escH(cl)+'" target="_blank" rel="noopener">'+escH(ct||'くわしく見る')+'<span class="msym">arrow_outward</span></a></p>';
           ndView.querySelector('.nd-body').innerHTML=bodyHtml;
