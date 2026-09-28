@@ -1459,7 +1459,7 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
 <header class="site-head" id="head">
   <div class="util">
     <a href="#">English</a>
-    <a href="#recruit-page" data-overlay="recruit-page"><span class="msym">edit_note</span>エントリー</a>
+    <a href="#entry" data-entry="1"><span class="msym">edit_note</span>エントリー</a>
     <a href="#news">お知らせ</a>
     <a href="#contact-page" data-overlay="contact-page"><span class="msym">mail</span>お問い合わせ</a>
     <a href="#"><span class="msym">search</span>サイト内検索</a>
@@ -1492,7 +1492,7 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
   </nav>
   <div class="mobnav-foot">
     <a class="pill" href="#join">仲間になる<span class="msym">arrow_forward</span></a>
-    <div class="mobnav-util"><a href="#">English</a><a href="#recruit-page" data-overlay="recruit-page"><span class="msym">edit_note</span>エントリー</a></div>
+    <div class="mobnav-util"><a href="#">English</a><a href="#entry" data-entry="1"><span class="msym">edit_note</span>エントリー</a></div>
   </div>
 </div>
 
@@ -2119,7 +2119,7 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
       </div>
       <div class="footcols">
         <div class="footcol"><h5>ABOUT</h5><a href="#about">わたしたち</a><a href="#how">課題と解法</a></div>
-        <div class="footcol"><h5>JOIN</h5><a href="#news">お知らせ</a><a href="#recruit">採用情報</a><a href="index.html#apply">エントリー</a></div>
+        <div class="footcol"><h5>JOIN</h5><a href="#news">お知らせ</a><a href="#recruit">採用情報</a><a href="#entry" data-entry="1">エントリー</a></div>
         <div class="footcol"><h5>CONTACT</h5><a href="#contact-page" data-overlay="contact-page">お問い合わせ</a><a href="#recruit-page" data-overlay="recruit-page">採用情報・エントリー</a><a href="#news-page" data-overlay="news-page">説明会・お知らせ</a></div>
       </div>
     </div>
@@ -3996,6 +3996,43 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     var rdv=o.querySelector('.rg-detail-view'),rlv=o.querySelector('.rg-list-view');if(rdv&&rlv){rdv.hidden=true;rlv.hidden=false;o.classList.remove('has-dbg');}
     var ef=o.querySelector('#entryForm'),s2=o.querySelector('#entryStep2'),dn=o.querySelector('#entryDone');if(ef&&s2&&dn){ef.hidden=false;s2.hidden=true;dn.hidden=true;o.querySelectorAll('.estep-i').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-s')==='1');});}}
   document.querySelectorAll('[data-overlay]').forEach(function(t){t.addEventListener('click',function(e){e.preventDefault();ovOpen(t.getAttribute('data-overlay'));});});
+
+  // 採用エントリーへの直リンク(#entry)
+  //   共有URL  https://connectaofficialhp.connectahubapp.com/#entry
+  //   → 「採用情報」を開いて、そのままエントリーフォーム(#rec-entry)まで送る。
+  //   対象は data-entry を付けた「エントリー」導線だけ(他の data-overlay の振る舞いは変えない)。
+  (function(){
+    var ENTRY_HASH=/^#(entry|apply)$/i, seq=0, setY=-1;
+    function entryY(pg,t){
+      var y=0,n=t;
+      while(n&&n!==pg){y+=n.offsetTop;n=n.offsetParent;}      // offsetTopなら開く時のtransform演出で狂わない
+      if(n!==pg){var r=t.getBoundingClientRect(),pr=pg.getBoundingClientRect();y=pg.scrollTop+(r.top-pr.top);}
+      return Math.max(0,y-14);
+    }
+    function entryScroll(){
+      var pg=document.getElementById('recruit-page'),t=document.getElementById('rec-entry');
+      if(!pg||!t)return;
+      pg.scrollTop=entryY(pg,t);setY=pg.scrollTop;               // フェードイン前に合わせる=跳ぶのが見えない
+    }
+    function entryOpen(){
+      var my=++seq;
+      ovOpen('recruit-page');                                    // Step1にリセットして開く(ovOpenの既存挙動)
+      entryScroll();
+      var again=function(){                                      // 写真の遅延読込で位置がずれた場合の追従
+        var pg=document.getElementById('recruit-page');
+        if(my!==seq||!pg||!pg.classList.contains('open'))return;
+        if(Math.abs(pg.scrollTop-setY)>4)return;                 // 利用者が自分で動かしたら触らない
+        entryScroll();
+      };
+      setTimeout(again,reduce?0:420);
+      if(document.readyState!=='complete')addEventListener('load',again,{once:true});
+    }
+    document.querySelectorAll('[data-entry]').forEach(function(a){
+      a.addEventListener('click',function(e){e.preventDefault();entryOpen();});
+    });
+    addEventListener('hashchange',function(){if(ENTRY_HASH.test(location.hash))entryOpen();});
+    if(ENTRY_HASH.test(location.hash))entryOpen();
+  })();
 
   // (Contact) お問い合わせフォーム — 参加者アプリと同一のGAS公開アクション submitContactInquiry へ送信
   //   (Inquiries台帳=consoleの問い合わせ管理に着地・受付メール自動送信・admin通知・レート制限はGAS側)
