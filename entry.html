@@ -82,6 +82,7 @@ details.termsbox .consent{margin:10px 0 4px;max-height:340px;overflow:auto}
 .state .mark{width:74px;height:74px;border-radius:50%;margin:0 auto 26px;display:grid;place-items:center;border:1px solid var(--line)}
 .state .mark.ok{border-color:#cfe3cf;background:#f4faf4}
 .state .mark.ng{border-color:#e9d9c8;background:#fdf9f3}
+.state .mark.info{border-color:#cfdcef;background:#f3f7fd}
 .state .mark svg{width:30px;height:30px}
 .state h1{font-family:var(--serif);font-weight:600;font-size:24px;letter-spacing:.06em;margin:0 0 14px;line-height:1.6}
 .state p{color:var(--ink2);font-size:14px;margin:0 0 8px;line-height:1.9}
@@ -124,12 +125,25 @@ function el(id){return document.getElementById(id)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function opts(arr,sel){return '<option value="">選択してください</option>'+arr.map(function(v){var val=typeof v==='string'?v:v.id,lab=typeof v==='string'?v:v.name;return '<option value="'+esc(val)+'"'+(sel===val?' selected':'')+'>'+esc(lab)+'</option>'}).join('')}
 
+/* (2026-10-09) 読み込みに時間制限と再試行(最大2回)。本体GASは一時的に 404/429/5xx や数十秒の遅れを返すことがあり、
+   そのまま「読み込みに失敗しました」と出すとリンクが壊れているように見える。読むだけなので再試行しても安全。送信(apiPost)は再送しない。 */
+function _fetchT(url,opt,ms){var c=('AbortController' in window)?new AbortController():null;var tm=c?setTimeout(function(){c.abort()},ms||25000):null;
+  return fetch(url,Object.assign({},opt||{},c?{signal:c.signal}:{})).then(function(r){if(tm)clearTimeout(tm);return r},function(e){if(tm)clearTimeout(tm);throw e});}
 async function apiGet(action,params){
-  var r=await fetch(GAS+'?action='+encodeURIComponent(action)+'&params='+encodeURIComponent(JSON.stringify(params||{})));
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  var j=await r.json();
-  if(!j.ok)throw new Error(j.error||'エラーが発生しました');
-  return j.data;
+  var url=GAS+'?action='+encodeURIComponent(action)+'&params='+encodeURIComponent(JSON.stringify(params||{}));
+  var last=null;
+  for(var i=0;i<3;i++){
+    if(i)await new Promise(function(z){setTimeout(z,700*i)});
+    var r;
+    try{r=await _fetchT(url,null,25000)}
+    catch(e){last=(e&&e.name==='AbortError')?new Error('時間内に応答がありませんでした'):e;continue}
+    if(r.status===404||r.status===429||r.status>=500){last=new Error('HTTP '+r.status);continue}
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var j=await r.json();
+    if(!j.ok)throw new Error(j.error||'エラーが発生しました');
+    return j.data;
+  }
+  throw last||new Error('通信に失敗しました');
 }
 async function apiPost(action,payload){
   var r=await fetch(GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:action,payload:payload||{}})});
@@ -140,11 +154,12 @@ async function apiPost(action,payload){
 }
 
 function renderState(kind,title,lines,sub){
-  var ok=kind==='ok';
+  var ok=kind==='ok',info=kind==='info';   // info = 受付済みで次の手続き待ち(保護者の同意待ちなど)
   el('app').innerHTML=
   '<div class="state">'+
-    '<div class="mark '+(ok?'ok':'ng')+'">'+(ok
+    '<div class="mark '+(ok?'ok':info?'info':'ng')+'">'+(ok
       ?'<svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5l5.2 5.2L20 6.8" stroke="#3f8a3f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      :info?'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#4a6fa8" stroke-width="1.8"/><path d="M12 7.6V12l3 2" stroke="#4a6fa8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
       :'<svg viewBox="0 0 24 24" fill="none"><path d="M12 7v6.4M12 17.2v.4" stroke="#b07f3e" stroke-width="2" stroke-linecap="round"/></svg>')+'</div>'+
     '<h1>'+esc(title)+'</h1>'+
     (lines||[]).map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+
@@ -153,6 +168,22 @@ function renderState(kind,title,lines,sub){
 }
 
 function linkFields(){return {appId:LINK.appId,purpose:LINK.purpose,exp:LINK.exp,sig:LINK.sig}}
+/* (2026-10-09) サーバが返す進み具合(手続きが先へ進んだリンク): 受付済み・同意待ちなどを表示。予約がまだなら予約画面をもう一度出す */
+function showProgress(pg){
+  if(pg&&pg.next==='book_interview'){renderInterviewNext(pg.name||'');window.scrollTo(0,0);return}
+  renderState(pg&&pg.kind==='ok'?'ok':'info',(pg&&pg.title)||'',(pg&&pg.lines)||[],'学生団体connec+a（コネクタ）');
+  window.scrollTo(0,0);
+}
+/* 送信が失敗に見えたとき(通信切れなど): 状態を引き直して、送信が通っていれば受付済みを出す。出したら true */
+async function recheckProgress(){
+  try{var c=await apiGet('getRecruitFormV2',linkFields());if(c&&c.ok===false&&c.progress&&c.progress.title){showProgress(c.progress);return true}}catch(e){}
+  return false;
+}
+function addReloadButton(){
+  var st=document.querySelector('.state');if(!st)return;
+  var b=document.createElement('button');b.className='btn';b.style.marginTop='18px';b.textContent='もう一度読み込む';
+  b.addEventListener('click',function(){location.reload()});st.appendChild(b);
+}
 
 /* ============ エントリーなし採用(面談あり): 基本情報フォーム → 面談予約案内 ============ */
 function renderEntry(ctx){
@@ -203,7 +234,8 @@ function renderEntry(ctx){
           '<p class="gp">ご入力いただいた保護者の方のメールアドレス宛に、同意確認のご案内を自動でお送りします。保護者の方の同意が確認でき次第、登録が完了します。</p>'+
           '<div class="grid2">'+
           '<div class="fld"><label>保護者氏名<span class="req">必須</span></label><input type="text" id="f_gname"></div>'+
-          '<div class="fld"><label>保護者メールアドレス<span class="req">必須</span></label><input type="email" id="f_gmail" placeholder="parent@gmail.com"></div>'+
+          '<div class="fld"><label>保護者メールアドレス<span class="req">必須</span></label><input type="email" id="f_gmail" placeholder="parent@gmail.com">'+
+            '<div class="hint" id="f_gmail_hint" hidden>携帯電話会社のメールアドレスは、受信設定によってはご案内が届かないことがあります。保護者の方に admin@connectahubapp.com からの受信を許可していただくか、Gmail などのアドレスをご入力ください。</div></div>'+
           '</div>'+
         '</div>'+
       '</section>'
@@ -225,6 +257,10 @@ function renderEntry(ctx){
       el('gsect').style.display=minor?'':'none';
       el('agreeNo').textContent=minor?'04':'03';
     });
+    // (2026-10-09) 保護者の携帯会社メール(au/docomo/SoftBank 等)は受信設定で同意のご案内が届かないことがある → その場で注意を出す
+    var CARRIER=/@(docomo\.ne\.jp|ezweb\.ne\.jp|au\.com|biz\.au\.com|softbank\.ne\.jp|i\.softbank\.jp|[a-z]\.vodafone\.ne\.jp|ymobile\.ne\.jp|y-mobile\.ne\.jp|emobile\.ne\.jp|disney\.ne\.jp|uqmobile\.jp|rakumail\.jp)\s*$/i;
+    var gm=el('f_gmail'),gh=el('f_gmail_hint');
+    if(gm&&gh)gm.addEventListener('input',function(){gh.hidden=!CARRIER.test(gm.value)});
   }
 
   el('fsubmit').addEventListener('click',async function(){
@@ -254,13 +290,14 @@ function renderEntry(ctx){
     var btn=this;btn.disabled=true;btn.textContent='送信しています…';
     try{
       var r=await apiPost('submitDirectEntry',p);
+      if(r&&r.ok===false&&r.progress&&r.progress.title){showProgress(r.progress);return}   // 送信済みのリンクで再送信した等
       if(r&&r.ok===false)throw new Error(r.error||'送信できませんでした');
       if(r&&r.interviewNext){
         renderInterviewNext(name);
       }else if(r&&r.guardianRequired){   // 旧(面談なし)リンク互換
         renderState('ok','ご入力ありがとうございました',
           ['基本情報のご入力を受け付けました。','保護者の方のメールアドレス宛に、同意確認のご案内をお送りしました。','保護者の方の同意が確認でき次第、登録が完了します。'],
-          'メールが届かない場合は、迷惑メールフォルダのご確認をお願いします。');
+          'メールが届かない場合は、迷惑メールフォルダや、携帯電話のメールの受信設定（admin@connectahubapp.com からの受信の許可）のご確認をお願いします。このページのリンクをもう一度開くと、手続きの進み具合を確認できます。');
       }else{
         renderState('ok','登録手続きが完了しました',
           ['ご入力ありがとうございました。登録手続きは自動で進みます。','完了のご連絡をメールでお送りしますので、今しばらくお待ちください。'],
@@ -268,6 +305,7 @@ function renderEntry(ctx){
       }
       window.scrollTo(0,0);
     }catch(ex){
+      if(await recheckProgress())return;   // 通信切れでも送信が通っていれば受付済みを出す
       btn.disabled=false;btn.textContent='入力内容を送信する';
       e.textContent=String(ex&&ex.message||ex);e.classList.add('on');e.scrollIntoView({block:'center'});
     }
@@ -314,12 +352,14 @@ function renderGuardian(ctx){
     var btn=this;btn.disabled=true;btn.textContent='送信しています…';
     try{
       var r=await apiPost('submitGuardianConsentPublic',Object.assign(linkFields(),{agree:true,guardianName:gname,userAgent:navigator.userAgent}));
+      if(r&&r.ok===false&&r.progress&&r.progress.title){showProgress(r.progress);return}
       if(r&&r.ok===false)throw new Error(r.error||'送信できませんでした');
       renderState('ok','ご同意ありがとうございました',
         ['同意を受け付けました。','登録手続きは自動で進み、完了のご連絡をご本人にお送りします。'],
         'ご不明な点は運営までお気軽にご連絡ください。');
       window.scrollTo(0,0);
     }catch(ex){
+      if(await recheckProgress())return;
       btn.disabled=false;btn.textContent='同意して送信する';
       e.textContent=String(ex&&ex.message||ex);e.classList.add('on');
     }
@@ -336,6 +376,8 @@ function renderGuardian(ctx){
   }
   try{
     var ctx=await apiGet('getRecruitFormV2',linkFields());
+    // (2026-10-09) 送信後に開き直したリンク: 「使えません」だけでなく、何が済んで次に何を待っているかを出す(サーバが progress を返す)
+    if(ctx&&ctx.ok===false&&ctx.progress&&ctx.progress.title){showProgress(ctx.progress);return}
     if(ctx&&ctx.ok===false){
       var expired=ctx.reason==='expired';
       renderState('ng',expired?'リンクの有効期限が切れています':'このリンクは現在ご利用いただけません',
@@ -350,6 +392,7 @@ function renderGuardian(ctx){
     renderState('ng','読み込みに失敗しました',
       ['通信が一時的に不安定な可能性があります。','時間をおいて、もう一度お試しください。'],
       String(ex&&ex.message||ex));
+    addReloadButton();
   }
 })();
 </script>

@@ -429,6 +429,7 @@ body.ap-lock .fab-recruit,body.editing .fab-recruit{opacity:0;pointer-events:non
 .ef-consent input{flex:none;width:17px;height:17px;margin-top:3px;accent-color:var(--blue)}
 .ef-consent em.req{font-style:normal;color:#fff;background:var(--azure);padding:2px 7px;border-radius:5px;font-size:10px;letter-spacing:.04em;margin-left:6px;white-space:nowrap}
 .ef-consent.err{color:#c23a55}
+.ef-hp{position:absolute!important;left:-10000px!important;top:auto;width:1px;height:1px;overflow:hidden}/* (2026-10-09) 人には見えない欄(機械的な投稿のふるい分け)。名前・ラベルは自動入力に拾われない無意味なものにする(本物の応募が黙って捨てられないように) */
 .entry-step2{text-align:center;max-width:520px;margin:0 auto;padding:10px 0}
 .es2-icon .msym{font-size:52px;color:var(--blue)}
 .es2-title{font-family:var(--serif);font-weight:700;font-size:clamp(20px,2.8vw,26px);letter-spacing:.04em;margin:14px 0 12px;color:var(--ink)}
@@ -2008,6 +2009,7 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
           <label class="ef-field"><span>事前に聞きたいこと <em>任意</em></span><textarea name="questions" rows="2" placeholder=""></textarea></label>
         </div>
         <div class="ef-submit">
+          <label class="ef-hp" aria-hidden="true">この欄は空のままにしてください<input type="text" name="ef_trap" tabindex="-1" autocomplete="off" data-lpignore="true" data-1p-ignore="true"></label>
           <label class="ef-consent" id="agreeWrap"><input type="checkbox" name="agree" id="agreeChk"><span>入力いただいた個人情報は、選考のご連絡と団体の運営のためにのみ利用します。この取り扱いに同意します<em class="req">必須</em></span></label>
           <button type="submit" class="pill">次へ:面接日程の調整<span class="msym">arrow_forward</span></button>
         </div>
@@ -4179,6 +4181,7 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
     function s2Ok(){s2Stat.style.display='none';}
     function s2Err(msg){s2Stat.style.display='block';s2Stat.style.color='#b0453e';s2Stat.style.background='#fdf4f3';s2Stat.style.border='1px solid #e6c3c3';s2Stat.innerHTML='';var t=document.createElement('span');t.textContent='エントリー内容を登録できませんでした（'+msg+'）。通信環境をご確認のうえ、再送信してください。';s2Stat.appendChild(t);s2Stat.appendChild(document.createElement('br'));var rb=document.createElement('button');rb.type='button';rb.className='linkbtn';rb.style.marginTop='6px';rb.innerHTML='<span class="msym">refresh</span>再送信する';rb.addEventListener('click',function(){if(lastPayload)doSubmit(lastPayload);});s2Stat.appendChild(rb);}
 
+    function newSubmissionKey(){try{var a=new Uint8Array(16);(window.crypto||window.msCrypto).getRandomValues(a);return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2)}).join('')}catch(e){return String(Date.now())+Math.random().toString(36).slice(2)}}
     var submitState='idle';   // idle | pending | done | error
     var lastPayload=null, pendingComplete=false;
     function finishEntry(){step2.hidden=true; if(done)done.hidden=false; toRec('center');}
@@ -4219,7 +4222,10 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
         name:nm.value.trim(), name_kana:v('kana'), email:em.value.trim(), affiliation:v('affil'), grade:v('grade'),
         residence_prefecture:v('pref'), desired_department_ids:posBtn?[posBtn.getAttribute('data-pos')]:[],
         desired_department_reason:mo.value.trim(), pre_interview_questions:extra.join('\n'),
-        privacy_agreed:!!(agreeChk&&agreeChk.checked)
+        privacy_agreed:!!(agreeChk&&agreeChk.checked),
+        // (2026-10-09) 人には見えない欄の値(機械的な投稿は何か入れてくる)と、送信ごとの使い捨ての番号
+        //   (通信切れの「再送信」でも同じ番号を使い回すので、本体が1回目の結果を返し二重応募にならない)
+        website:v('ef_trap'), submission_key:newSubmissionKey()
       };
       // 楽観的に即Step2へ進め、送信は裏で実行(体感ゼロ化)
       entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start');
