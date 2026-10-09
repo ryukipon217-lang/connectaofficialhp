@@ -425,6 +425,10 @@ body.ap-lock .fab-recruit,body.editing .fab-recruit{opacity:0;pointer-events:non
 .ef-hint{font-size:11.5px;color:var(--ink3);margin:12px 0 0}
 .ef-submit{text-align:center;margin-top:34px}
 .ef-note{font-size:11.5px;color:var(--ink3);margin:16px 0 0}
+.ef-consent{display:flex;align-items:flex-start;gap:10px;max-width:560px;margin:0 auto 20px;text-align:left;font-size:13px;line-height:1.75;color:var(--ink2);cursor:pointer}
+.ef-consent input{flex:none;width:17px;height:17px;margin-top:3px;accent-color:var(--blue)}
+.ef-consent em.req{font-style:normal;color:#fff;background:var(--azure);padding:2px 7px;border-radius:5px;font-size:10px;letter-spacing:.04em;margin-left:6px;white-space:nowrap}
+.ef-consent.err{color:#c23a55}
 .entry-step2{text-align:center;max-width:520px;margin:0 auto;padding:10px 0}
 .es2-icon .msym{font-size:52px;color:var(--blue)}
 .es2-title{font-family:var(--serif);font-weight:700;font-size:clamp(20px,2.8vw,26px);letter-spacing:.04em;margin:14px 0 12px;color:var(--ink)}
@@ -1992,7 +1996,9 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
             <label class="ef-field"><span>電話</span><input type="tel" name="tel" placeholder="090-0000-0000"></label>
             <label class="ef-field"><span>都道府県</span><select name="pref" id="prefSel" class="ef-select"><option value="">選択してください</option></select></label>
             <label class="ef-field"><span>市区町村 <em>任意</em></span><select name="city" id="citySel" class="ef-select" disabled><option value="">都道府県を選択</option></select></label>
-            <label class="ef-field ef-full"><span>学年・所属 <em>任意</em></span><input type="text" name="affil" placeholder="例: 大学2年 / 社会人"></label>
+            <label class="ef-field"><span>学年 <em class="req">必須</em></span><select name="grade" id="gradeSel" class="ef-select" required><option value="">選択してください</option><option>中学1年</option><option>中学2年</option><option>中学3年</option><option>高校1年</option><option>高校2年</option><option>高校3年</option><option>高専</option><option>大学1年</option><option>大学2年</option><option>大学3年</option><option>大学4年</option><option>大学院</option><option>専門学校</option><option>社会人</option><option>その他</option></select></label>
+            <label class="ef-field"><span>学校名・所属 <em>任意</em></span><input type="text" name="affil" placeholder="例: ○○大学 / ○○高校 / 会社員"></label>
+            <p class="ef-hint ef-full" id="gradeMinorHint" hidden>中学生・高校生の方は、採用が決まったあとの登録の際に、保護者の方の同意が必要です（保護者の方へご案内をお送りします）。</p>
           </div>
         </div>
         <div class="ef-block">
@@ -2002,8 +2008,8 @@ body.selftest .pr-row,body.selftest .bub,body.selftest .orbit.flow .oline,body.s
           <label class="ef-field"><span>事前に聞きたいこと <em>任意</em></span><textarea name="questions" rows="2" placeholder=""></textarea></label>
         </div>
         <div class="ef-submit">
+          <label class="ef-consent" id="agreeWrap"><input type="checkbox" name="agree" id="agreeChk"><span>入力いただいた個人情報は、選考のご連絡と団体の運営のためにのみ利用します。この取り扱いに同意します<em class="req">必須</em></span></label>
           <button type="submit" class="pill">次へ:面接日程の調整<span class="msym">arrow_forward</span></button>
-          <p class="ef-note">送信いただいた内容は、選考のためにのみ利用します。</p>
         </div>
       </form>
       <!-- STEP 2 -->
@@ -4190,9 +4196,15 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
           pendingComplete=false;
         });
     }
+    // (2026-10-06) 学年(必須)と個人情報の取り扱いへの同意(必須)。中学生・高校生には保護者同意の案内を出す。
+    var gradeSel=document.getElementById('gradeSel'), minorHint=document.getElementById('gradeMinorHint');
+    if(gradeSel&&minorHint)gradeSel.addEventListener('change',function(){minorHint.hidden=['中学1年','中学2年','中学3年','高校1年','高校2年','高校3年'].indexOf(gradeSel.value)<0;});
+    var agreeChk=document.getElementById('agreeChk'), agreeWrap=document.getElementById('agreeWrap');
+    if(agreeChk&&agreeWrap)agreeChk.addEventListener('change',function(){if(agreeChk.checked)agreeWrap.classList.remove('err');});
     entryForm.addEventListener('submit',function(e){e.preventDefault();
       var nm=entryForm.querySelector('[name=name]'), em=entryForm.querySelector('[name=email]'), mo=entryForm.querySelector('[name=motive]'), ok=true, first=null;
-      [[nm,!!nm.value.trim()],[em,/.+@.+\..+/.test(em.value)],[mo,!!mo.value.trim()]].forEach(function(p){if(!p[1]){p[0].classList.add('err');ok=false;if(!first)first=p[0];}else p[0].classList.remove('err');});
+      [[nm,!!nm.value.trim()],[em,/.+@.+\..+/.test(em.value)],[gradeSel,!!(gradeSel&&gradeSel.value)],[mo,!!mo.value.trim()]].forEach(function(p){if(!p[0])return;if(!p[1]){p[0].classList.add('err');ok=false;if(!first)first=p[0];}else p[0].classList.remove('err');});
+      if(agreeChk&&!agreeChk.checked){ok=false;if(agreeWrap)agreeWrap.classList.add('err');if(!first)first=agreeChk;}
       if(!ok){if(first)first.focus();return;}
       // 既に送信成功/送信中なら二重送信せず、そのままStep2へ
       if(submitState==='done'||submitState==='pending'){entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start'); return;}
@@ -4204,9 +4216,10 @@ const JP_CITIES={"北海道":["札幌市","札幌市 中央区","札幌市 北�
       if(v('tel'))extra.push('【電話】'+v('tel'));
       if(v('city'))extra.push('【市区町村】'+v('city'));
       lastPayload={
-        name:nm.value.trim(), name_kana:v('kana'), email:em.value.trim(), affiliation:v('affil'),
+        name:nm.value.trim(), name_kana:v('kana'), email:em.value.trim(), affiliation:v('affil'), grade:v('grade'),
         residence_prefecture:v('pref'), desired_department_ids:posBtn?[posBtn.getAttribute('data-pos')]:[],
-        desired_department_reason:mo.value.trim(), pre_interview_questions:extra.join('\n')
+        desired_department_reason:mo.value.trim(), pre_interview_questions:extra.join('\n'),
+        privacy_agreed:!!(agreeChk&&agreeChk.checked)
       };
       // 楽観的に即Step2へ進め、送信は裏で実行(体感ゼロ化)
       entryForm.hidden=true; step2.hidden=false; setStep(2); toRec('start');
