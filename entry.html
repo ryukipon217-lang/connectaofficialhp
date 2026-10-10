@@ -98,6 +98,46 @@ details.termsbox .consent{margin:10px 0 4px;max-height:340px;overflow:auto}
 .reveal{opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
 .reveal.on{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+/* ===== (2026-10-10 保護者同意 v2) 説明の全文と項目別の回答。v1 の画面には影響しない (.v2 の下だけ) ===== */
+.radios{display:flex;gap:10px;flex-wrap:wrap}
+.radio{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:8px 16px;font-size:14px;cursor:pointer}
+.fld label.radio{display:inline-flex;font-size:14px;font-weight:500;letter-spacing:0;margin-bottom:0}
+.radio input{accent-color:var(--blue);width:18px;height:18px}
+.btn.ghost{background:#fff;color:var(--blue-deep);border:1px solid #b9c7dc;margin-top:12px}
+.btn.ghost:hover{background:var(--soft)}
+.btn.warn{background:#8a2f2f}
+.btn.warn:hover{background:#a53a3a}
+.v2 .docbody{font-size:14.5px;line-height:1.95;color:var(--ink);white-space:pre-line;overflow-wrap:anywhere}
+.v2 .toc{border:1px solid var(--line);border-radius:12px;background:var(--soft);padding:16px 18px;margin:0 0 6px}
+.v2 .toc-h{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--ink2);margin:0 0 6px}
+.v2 .toc ol{margin:0;padding-left:1.5em;font-size:13.5px;line-height:2.1;columns:2;column-gap:28px}
+@media(max-width:560px){.v2 .toc ol{columns:1}}
+.v2 .toc a{text-decoration:none}
+.v2 .toc a:hover,.v2 .toc a:focus{text-decoration:underline}
+.v2 .sect-note{font-size:13px;color:var(--ink2);margin:0 0 14px}
+.v2 .check .t small{color:var(--ink2);font-size:12.5px;margin-top:2px}
+.v2 .fld .hint{color:var(--ink2)}
+.v2 .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;border-radius:6px;padding:1px 8px;margin-right:8px;vertical-align:1px}
+.v2 .tag.req{background:#fdecec;color:#8a2f2f;border:1px solid #efc9c9}
+.v2 .tag.opt{background:var(--soft);color:var(--ink2);border:1px solid var(--line)}
+.v2 fieldset.uses{border:1px solid var(--line);border-radius:10px;padding:8px 14px 10px;margin:0 0 12px;min-width:0}
+.v2 fieldset.uses legend{font-size:12.5px;font-weight:700;letter-spacing:.06em;padding:0 6px}
+.v2 fieldset.uses.off{opacity:.55}
+.v2 .usechk{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-right:18px;font-size:13.5px;cursor:pointer}
+.v2 .usechk input{accent-color:var(--blue);width:18px;height:18px}
+.v2 textarea{width:100%;font-family:inherit;font-size:15px;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:11px 13px;outline:none;resize:vertical;line-height:1.7}
+.v2 textarea:focus{border-color:var(--azure);box-shadow:0 0 0 3px rgba(46,107,230,.12)}
+.v2 .note-box{border:1px solid #cfdcef;background:#f3f7fd;border-radius:10px;padding:12px 15px;font-size:13px;color:var(--blue-deep);margin:0 0 18px;line-height:1.7}
+.v2 .declinebox{border:1px solid #e6c3c3;background:#fdf7f7;border-radius:12px;padding:18px;margin-top:16px;font-size:13.5px;line-height:1.8}
+.v2 .declinebox p{margin:0 0 12px}
+.v2 .declinebox .btn{margin-top:10px}
+.v2 .printline{text-align:center;font-size:12.5px;margin:22px 0 0}
+/* (2026-10-10 本人向けの説明と同意 v2) 登録フォームの中の説明の枠 */
+.mcdoc{border:1px solid var(--line);border-radius:12px;background:#fff;padding:2px 18px 16px;max-height:460px;overflow:auto;-webkit-overflow-scrolling:touch}
+.mcdoc h3{font-family:var(--serif);font-weight:600;font-size:15px;letter-spacing:.06em;margin:20px 0 6px}
+.mcdoc:focus{outline:2px solid var(--azure);outline-offset:2px}
+@media print{.topbar,.foot,.btn,.v2 .toc,.v2 .printline,.v2 .declinebox,.err{display:none!important}.wrap{max-width:none;padding:0}.reveal{opacity:1;transform:none}}
 </style>
 </head>
 <body>
@@ -185,10 +225,32 @@ function addReloadButton(){
   b.addEventListener('click',function(){location.reload()});st.appendChild(b);
 }
 
+/* ============ (2026-10-10 本人向けの説明と同意 v2) 登録フォームの中に出す、活動の説明と項目別の確認 ============
+   サーバが memberConsent を返したとき (改訂版が有効で、登録の段階) だけ。返さない間は今までどおり「規約への同意」だけ。
+   写真・動画は用途ごとの任意で、選ばなくても登録できる。すでに登録を済ませたメンバーには出ない。 */
+function renderMemberConsent(mc){
+  var uses=mc.uses||[];
+  var box=function(cls){return uses.map(function(u){return '<label class="usechk"><input type="checkbox" class="'+cls+'" data-k="'+esc(u.key)+'"><span>'+esc(u.label)+'</span></label>'}).join('')};
+  return {
+    doc:'<section class="sect v2" id="mcsect"><h2><span class="no" id="mcNo">03</span>活動についてのご説明</h2><div class="rule"></div>'+
+      '<p class="sect-note">登録の前に、活動の内容と約束ごとをご確認ください。お読みいただく時間の目安は10分ほどです。枠の中をスクロールして、最後までお読みください。</p>'+
+      '<div class="mcdoc" tabindex="0" role="region" aria-label="活動についてのご説明">'+((mc.doc&&mc.doc.sections)||[]).map(function(x){return '<h3>'+esc(x.no+'. '+x.title)+'</h3><div class="docbody">'+linkify(esc(x.body))+'</div>'}).join('')+'</div></section>',
+    items:(mc.requiredItems||[]).map(function(it){return '<label class="check"><input type="checkbox" class="m_item" data-k="'+esc(it.key)+'" data-l="'+esc(it.label+' '+it.title)+'"><span class="t"><b class="tag req">'+esc(it.label)+'</b>'+esc(it.title)+'<small>'+esc(it.text)+'</small></span></label>'}).join('')+
+      '<p class="sect-note" style="margin-top:22px"><b>お選びいただく項目</b>　<b class="tag opt">任意</b>選ばなくても、活動には参加できます。チェックを付けた用途にだけ使います。</p>'+
+      '<fieldset class="uses" id="m_photoSet"><legend>写真の広報利用</legend>'+box('m_photo')+'</fieldset>'+
+      '<fieldset class="uses" id="m_videoSet"><legend>動画の広報利用</legend>'+box('m_video')+'</fieldset>'+
+      '<label class="check"><input type="checkbox" id="m_noshoot"><span class="t">撮影そのものを控えてほしい<small>チェックを付けると、写真・動画の広報利用はすべて「利用しない」になります。</small></span></label>'
+  };
+}
+
 /* ============ エントリーなし採用(面談あり): 基本情報フォーム → 面談予約案内 ============ */
 function renderEntry(ctx){
   var preset=ctx.presetDept||null;
   var noIv=String(ctx.currentPhase||'')==='採用後';   // 面談なしフロー(登録のみ): 採用後|入力待ちで発行されたリンク
+  /* (2026-10-10 保護者同意 v2) サーバが guardianRule='v2' を返す間だけ、対象を「在学段階が高校以下 または 18歳未満」で判定する。
+     返さない間 (v1) は今までどおり学年6種。学校名からは推定しない。生年月日は尋ねない。 */
+  var V2RULE=ctx.guardianRule==='v2',GGRADES=ctx.guardianGrades||MINORS;
+  var MC=(noIv&&V2RULE&&ctx.memberConsent)?ctx.memberConsent:null,mcParts=MC?renderMemberConsent(MC):null;   // 本人向けの説明と同意 (改訂版が有効な間の登録だけ)
   el('app').innerHTML=
   '<main class="wrap reveal" id="rv">'+
     '<p class="eyebrow">Member Entry</p>'+
@@ -207,6 +269,12 @@ function renderEntry(ctx){
       '<div class="fld"><label>学年<span class="req">必須</span></label><select id="f_grade">'+opts(GRADES)+'</select></div>'+
       '<div class="fld"><label>学校名・所属<span class="opt">任意</span></label><input type="text" id="f_school" placeholder="○○大学 / ○○高校"></div>'+
       '</div>'+
+      (noIv&&V2RULE
+        ?'<div class="fld" id="kosenBox" style="display:none"><label for="f_kosen">高専の学年<span class="req">必須</span></label><select id="f_kosen"><option value="">選択してください</option><option value="1-3">1〜3年</option><option value="4-5">4年以上（専攻科を含む）</option></select></div>'+
+         '<div class="fld" id="u18Box" style="display:none"><label>現在の年齢<span class="req">必須</span></label>'+
+           '<div class="radios"><label class="radio"><input type="radio" name="f_u18" value="yes"><span>18歳未満です</span></label><label class="radio"><input type="radio" name="f_u18" value="no"><span>18歳以上です</span></label></div>'+
+           '<div class="hint">保護者の方へのご確認が必要かどうかを判断するためだけに伺います。生年月日は伺いません。</div></div>'
+        :'')+
     '</section>'+
 
     '<section class="sect"><h2><span class="no">02</span>活動について</h2><div class="rule"></div>'+
@@ -230,8 +298,8 @@ function renderEntry(ctx){
     (noIv
       ?'<section class="sect" id="gsect" style="display:none"><h2><span class="no">03</span>保護者の方の同意</h2><div class="rule"></div>'+
         '<div class="gbox">'+
-          '<p class="gh">未成年（高校生以下）の方は保護者の同意が必要です</p>'+
-          '<p class="gp">ご入力いただいた保護者の方のメールアドレス宛に、同意確認のご案内を自動でお送りします。保護者の方の同意が確認でき次第、登録が完了します。</p>'+
+          '<p class="gh">'+(V2RULE?'高校生以下の方、または18歳未満の方は、保護者の方のご確認が必要です':'未成年（高校生以下）の方は保護者の同意が必要です')+'</p>'+
+          '<p class="gp">'+(V2RULE?'ご入力いただいた保護者の方のメールアドレス宛に、活動内容のご説明と、ご確認のお願いを自動でお送りします。保護者の方のご回答が確認でき次第、登録が完了します。':'ご入力いただいた保護者の方のメールアドレス宛に、同意確認のご案内を自動でお送りします。保護者の方の同意が確認でき次第、登録が完了します。')+'</p>'+
           '<div class="grid2">'+
           '<div class="fld"><label>保護者氏名<span class="req">必須</span></label><input type="text" id="f_gname"></div>'+
           '<div class="fld"><label>保護者メールアドレス<span class="req">必須</span></label><input type="email" id="f_gmail" placeholder="parent@gmail.com">'+
@@ -241,9 +309,11 @@ function renderEntry(ctx){
       '</section>'
       :'')+
 
-    '<section class="sect"><h2><span class="no" id="agreeNo">03</span>同意事項</h2><div class="rule"></div>'+
+    (MC?mcParts.doc:'')+
+    '<section class="sect'+(MC?' v2':'')+'"><h2><span class="no" id="agreeNo">03</span>同意事項</h2><div class="rule"></div>'+
       '<details class="termsbox"><summary>メンバーシップ規約（全文を読む）</summary><div class="consent">'+esc(TERMS_TEXT)+'</div></details>'+
       '<label class="check"><input type="checkbox" id="f_terms"><span class="t">メンバーシップ規約に同意します<span class="req" style="color:#c0392b;font-size:10.5px;margin-left:7px">必須</span><small>上の「全文を読む」から規約をご確認ください。活動には対面およびオンラインでの交流が含まれます。</small></span></label>'+
+      (MC?mcParts.items:'')+
           '</section>'+
 
     '<div class="err" id="ferr"></div>'+
@@ -251,12 +321,39 @@ function renderEntry(ctx){
   '</main>';
   requestAnimationFrame(function(){var rv=el('rv');if(rv)rv.classList.add('on')});
 
+  /* 保護者欄を出すか。v1: 学年6種 / v2: 高校以下の学年・高専1〜3年・18歳未満 */
+  function u18Shown(){var b=el('u18Box');return !!(b&&b.style.display!=='none')}
+  function needGuardian(){
+    var g=el('f_grade').value;
+    if(!V2RULE)return MINORS.indexOf(g)>=0;
+    if(GGRADES.indexOf(g)>=0)return true;
+    if(g==='高専'&&el('f_kosen').value==='1-3')return true;
+    var u=document.querySelector('input[name=f_u18]:checked');
+    return !!(u18Shown()&&u&&u.value==='yes');
+  }
+  function syncGuardian(){
+    if(V2RULE){
+      var g=el('f_grade').value,kosen=g==='高専',kv=el('f_kosen').value;
+      var hs=GGRADES.indexOf(g)>=0||(kosen&&kv==='1-3');
+      el('kosenBox').style.display=kosen?'':'none';
+      el('u18Box').style.display=(g&&!hs&&!(kosen&&!kv))?'':'none';   // 高校以下の人には年齢を尋ねない
+    }
+    var need=needGuardian(),n=need?4:3;
+    el('gsect').style.display=need?'':'none';
+    if(MC){el('mcNo').textContent='0'+n;n++}
+    el('agreeNo').textContent='0'+n;
+  }
   if(noIv){
-    el('f_grade').addEventListener('change',function(){
-      var minor=MINORS.indexOf(this.value)>=0;
-      el('gsect').style.display=minor?'':'none';
-      el('agreeNo').textContent=minor?'04':'03';
-    });
+    el('f_grade').addEventListener('change',syncGuardian);
+    if(V2RULE){el('f_kosen').addEventListener('change',syncGuardian);document.querySelectorAll('input[name=f_u18]').forEach(function(x){x.addEventListener('change',syncGuardian)})}
+    if(MC){
+      syncGuardian();   // 見出しの番号をそろえる
+      el('m_noshoot').addEventListener('change',function(){
+        var off=this.checked;
+        document.querySelectorAll('.m_photo,.m_video').forEach(function(x){x.disabled=off;if(off)x.checked=false});
+        el('m_photoSet').classList.toggle('off',off);el('m_videoSet').classList.toggle('off',off);
+      });
+    }
     // (2026-10-09) 保護者の携帯会社メール(au/docomo/SoftBank 等)は受信設定で同意のご案内が届かないことがある → その場で注意を出す
     var CARRIER=/@(docomo\.ne\.jp|ezweb\.ne\.jp|au\.com|biz\.au\.com|softbank\.ne\.jp|i\.softbank\.jp|[a-z]\.vodafone\.ne\.jp|ymobile\.ne\.jp|y-mobile\.ne\.jp|emobile\.ne\.jp|disney\.ne\.jp|uqmobile\.jp|rakumail\.jp)\s*$/i;
     var gm=el('f_gmail'),gh=el('f_gmail_hint');
@@ -266,15 +363,21 @@ function renderEntry(ctx){
   el('fsubmit').addEventListener('click',async function(){
     var e=el('ferr');e.classList.remove('on');
     var name=el('f_name').value.trim(),email=el('f_email').value.trim(),grade=el('f_grade').value;
-    var minor=noIv&&MINORS.indexOf(grade)>=0;
+    var minor=noIv&&needGuardian();
     var miss=[];
     if(!name)miss.push('氏名');
     if(!email)miss.push('メールアドレス');
     if(!grade)miss.push('学年');
+    var u18=document.querySelector('input[name=f_u18]:checked');
+    if(noIv&&V2RULE&&grade==='高専'&&!el('f_kosen').value)miss.push('高専の学年');
+    if(noIv&&V2RULE&&u18Shown()&&!u18)miss.push('現在の年齢（18歳未満かどうか）');
     if(minor&&!el('f_gname').value.trim())miss.push('保護者氏名');
     if(minor&&!el('f_gmail').value.trim())miss.push('保護者メールアドレス');
     if(!el('f_terms').checked)miss.push('メンバーシップ規約への同意');
+    var mItems={};
+    if(MC)document.querySelectorAll('.m_item').forEach(function(x){mItems[x.dataset.k]=!!x.checked;if(!x.checked)miss.push(x.dataset.l)});
     if(miss.length){e.textContent='未入力の項目があります: '+miss.join('・');e.classList.add('on');e.scrollIntoView({block:'center'});return}
+    if(minor&&V2RULE&&el('f_gmail').value.trim().toLowerCase()===email.toLowerCase()){e.textContent='保護者の方のメールアドレスには、ご本人とは別の、保護者の方ご自身のアドレスをご入力ください。';e.classList.add('on');e.scrollIntoView({block:'center'});return}
     var p=Object.assign(linkFields(),{
       name:name,name_kana:el('f_kana').value.trim(),email:email,grade:grade,
       school_name:el('f_school').value.trim(),
@@ -285,18 +388,24 @@ function renderEntry(ctx){
       p.join_date=el('f_join').value;p.residence_country=el('f_country').value.trim();
       p.remote_available=el('f_remote').checked;p.emergency_contact=el('f_emg').value.trim();
       p.guardian_name=minor?el('f_gname').value.trim():'';p.guardian_email=minor?el('f_gmail').value.trim():'';
+      if(V2RULE){if(grade==='高専')p.kosen_year=el('f_kosen').value;if(u18Shown()&&u18)p.under18=u18.value}   // 高校以下の人の年齢は送らない
+      if(MC){
+        var mPick=function(cls){var o={};document.querySelectorAll('.'+cls).forEach(function(x){o[x.dataset.k]=!!x.checked});return o};
+        p.memberConsent={documentHash:MC.documentHash,items:mItems,photo:mPick('m_photo'),video:mPick('m_video'),noShooting:el('m_noshoot').checked};
+      }
     }
     var d=el('f_dept');if(d&&d.value)p.deptId=d.value;
     var btn=this;btn.disabled=true;btn.textContent='送信しています…';
     try{
       var r=await apiPost('submitDirectEntry',p);
       if(r&&r.ok===false&&r.progress&&r.progress.title){showProgress(r.progress);return}   // 送信済みのリンクで再送信した等
-      if(r&&r.ok===false)throw new Error(r.error||'送信できませんでした');
+      if(r&&r.ok===false){var er=new Error(r.error||'送信できませんでした');er.reload=!!r.reload;throw er}
       if(r&&r.interviewNext){
         renderInterviewNext(name);
       }else if(r&&r.guardianRequired){   // 旧(面談なし)リンク互換
         renderState('ok','ご入力ありがとうございました',
-          ['基本情報のご入力を受け付けました。','保護者の方のメールアドレス宛に、同意確認のご案内をお送りしました。','保護者の方の同意が確認でき次第、登録が完了します。'],
+          V2RULE?['基本情報のご入力を受け付けました。','保護者の方のメールアドレス宛に、活動内容のご説明と、ご確認のお願いをお送りします（数分かかることがあります）。','保護者の方のご回答が確認でき次第、登録が完了します。']
+                :['基本情報のご入力を受け付けました。','保護者の方のメールアドレス宛に、同意確認のご案内をお送りしました。','保護者の方の同意が確認でき次第、登録が完了します。'],
           'メールが届かない場合は、迷惑メールフォルダや、携帯電話のメールの受信設定（admin@connectahubapp.com からの受信の許可）のご確認をお願いします。このページのリンクをもう一度開くと、手続きの進み具合を確認できます。');
       }else{
         renderState('ok','登録手続きが完了しました',
@@ -307,7 +416,7 @@ function renderEntry(ctx){
     }catch(ex){
       if(await recheckProgress())return;   // 通信切れでも送信が通っていれば受付済みを出す
       btn.disabled=false;btn.textContent='入力内容を送信する';
-      e.textContent=String(ex&&ex.message||ex);e.classList.add('on');e.scrollIntoView({block:'center'});
+      e.textContent=String(ex&&ex.message||ex);e.classList.add('on');e.scrollIntoView({block:'center'});if(ex&&ex.reload)addReloadUnder(e);
     }
   });
 }
@@ -366,6 +475,117 @@ function renderGuardian(ctx){
   });
 }
 
+/* ============ 保護者同意フォーム (改訂版 v2): 説明の全文 + 項目別の回答 ============
+   サーバが consentVersion='guardian_consent_v2' を返した応募だけ。改訂前の対象者には上の renderGuardian (v1) のまま。
+   必須と任意を分ける。写真・動画は用途ごとの任意で、選ばなくても参加の同意は成立する。「今回は同意しない」も回答できる。
+   ブラウザの種類 (userAgent) は送らない。 */
+function linkify(escaped){
+  return String(escaped).split('https://connectaofficialhp.connectahubapp.com/').join('<a href="https://connectaofficialhp.connectahubapp.com/" target="_blank" rel="noopener">https://connectaofficialhp.connectahubapp.com/</a>')
+    .split('admin@connectahubapp.com').join('<a href="mailto:admin@connectahubapp.com">admin@connectahubapp.com</a>');
+}
+/* 全角で打たれた電話番号を半角に直す (日本語入力のまま打たれやすい) */
+function toHalfTel(v){return String(v||'').replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0)}).replace(/[－ー―‐−]/g,'-').replace(/＋/g,'+').replace(/　/g,' ').trim()}
+/* サーバが「読み込み直してください」と返したとき、エラーの下に読み直しのボタンを出す (1つだけ) */
+function addReloadUnder(errEl){
+  if(!errEl||document.getElementById('inlineReload'))return;
+  var b=document.createElement('button');b.id='inlineReload';b.type='button';b.className='btn ghost';b.textContent='もう一度読み込む';
+  b.addEventListener('click',function(){location.reload()});errEl.parentNode.insertBefore(b,errEl.nextSibling);
+}
+function renderGuardianV2(ctx){
+  document.title='保護者の方へ | 学生団体 connec+a（コネクタ）';
+  var secs=(ctx.doc&&ctx.doc.sections)||[],items=ctx.requiredItems||[],uses=ctx.uses||[];
+  var reqN=items.filter(function(it){return it.required}).length;
+  var no2=function(n){return ('0'+n).slice(-2)},base=secs.length;
+  var REQ='<span class="req">必須</span>',OPT='<span class="opt">任意</span>';
+  var useBoxes=function(cls){return uses.map(function(u){return '<label class="usechk"><input type="checkbox" class="'+cls+'" data-k="'+esc(u.key)+'"><span>'+esc(u.label)+'</span></label>'}).join('')};
+  el('app').innerHTML=
+  '<main class="wrap reveal v2" id="rv">'+
+    '<p class="eyebrow">For Parents and Guardians</p>'+
+    '<h1 class="title">'+esc((ctx.doc&&ctx.doc.title)||'保護者の方へ')+'</h1>'+
+    '<p class="lede">'+esc(ctx.candidateName||'')+'さんの活動参加について、保護者の方にご確認をお願いしています。説明をお読みのうえ、ページの下の回答欄からご回答ください。</p>'+
+    (ctx.previousDecision==='不同意'?'<div class="note-box">前回は「今回は同意しない」とご回答いただいています。お考えが変わった場合は、あらためてご回答いただけます。</div>':'')+
+    '<nav class="toc" aria-label="目次"><p class="toc-h">目次</p><ol>'+secs.map(function(s){return '<li><a href="#sec'+s.no+'">'+esc(s.title)+'</a></li>'}).join('')+'<li><a href="#answer">保護者の方の確認欄</a></li><li><a href="#items">個別の同意欄</a></li></ol></nav>'+
+    secs.map(function(s){return '<section class="sect" id="sec'+s.no+'"><h2><span class="no">'+no2(s.no)+'</span>'+esc(s.title)+'</h2><div class="rule"></div><div class="docbody">'+linkify(esc(s.body))+'</div></section>'}).join('')+
+    '<section class="sect" id="answer"><h2><span class="no">'+no2(base+1)+'</span>保護者の方の確認欄</h2><div class="rule"></div>'+
+      '<div class="grid2">'+
+      '<div class="fld"><label for="g_name">保護者氏名'+REQ+'</label><input type="text" id="g_name" autocomplete="name" maxlength="100"></div>'+
+      '<div class="fld"><label for="g_rel">ご本人との続柄'+REQ+'</label><select id="g_rel">'+opts(ctx.relationships||[])+'</select></div>'+
+      '</div>'+
+      '<div class="fld" id="g_relOtherBox" style="display:none"><label for="g_relOther">続柄（その他の内容）'+REQ+'</label><input type="text" id="g_relOther" maxlength="50" placeholder="例: 叔母、未成年後見人"></div>'+
+      '<div class="fld"><label for="g_phone">緊急時の連絡先の電話番号'+(ctx.phoneRequired?REQ:OPT)+'</label><input type="tel" id="g_phone" autocomplete="tel" placeholder="090-0000-0000"><div class="hint">活動中の緊急時に、保護者の方へ連絡するためだけに使います。</div></div>'+
+      '<label class="check"><input type="checkbox" id="g_declared"><span class="t"><b class="tag req">必須</b>'+esc(ctx.declaration||'')+'</span></label>'+
+    '</section>'+
+    '<section class="sect" id="items"><h2><span class="no">'+no2(base+2)+'</span>個別の同意欄</h2><div class="rule"></div>'+
+      '<p class="sect-note"><b>必ずご確認いただく項目</b>　'+reqN+'つすべてにチェックが必要です。</p>'+
+      items.map(function(it){return '<label class="check"><input type="checkbox" class="g_item" data-k="'+esc(it.key)+'" data-req="'+(it.required?'1':'0')+'" data-l="'+esc(it.label+' '+it.title)+'"><span class="t"><b class="tag '+(it.required?'req':'opt')+'">'+esc(it.label)+'</b>'+esc(it.title)+'<small>'+esc(it.text)+'</small></span></label>'}).join('')+
+      '<p class="sect-note" style="margin-top:26px"><b>お選びいただく項目</b>　<b class="tag opt">任意</b>選ばなくても、活動には参加できます。チェックを付けた用途にだけ使います。</p>'+
+      '<fieldset class="uses" id="g_photoSet"><legend>写真の広報利用</legend>'+useBoxes('g_photo')+'</fieldset>'+
+      '<fieldset class="uses" id="g_videoSet"><legend>動画の広報利用</legend>'+useBoxes('g_video')+'</fieldset>'+
+      '<label class="check"><input type="checkbox" id="g_noshoot"><span class="t">撮影そのものを控えてほしい<small>チェックを付けると、写真・動画の広報利用はすべて「利用しない」になります。</small></span></label>'+
+      '<div class="fld"><label for="g_note">ご質問・お伝えになりたいこと'+OPT+'</label><textarea id="g_note" maxlength="500" rows="4"></textarea><div class="hint">500文字まで。</div></div>'+
+    '</section>'+
+    '<div class="err" id="gerr" role="alert"></div>'+
+    '<button class="btn" id="gsubmit" type="button">この内容で回答する（同意する）</button>'+
+    '<button class="btn ghost" id="gdecline" type="button">今回は同意しない</button>'+
+    '<div class="declinebox" id="gdeclineBox" hidden>'+
+      '<p><b>「今回は同意しない」でよろしいですか。</b><br>登録の手続きは進めません。団体からご本人へ、その後の手続きについてご連絡します。</p>'+
+      '<div class="fld"><label for="g_dnote">理由やご意見'+OPT+'</label><textarea id="g_dnote" maxlength="500" rows="3"></textarea></div>'+
+      '<button class="btn warn" id="gdeclineGo" type="button">同意しないと回答する</button>'+
+      '<button class="btn ghost" id="gdeclineCancel" type="button">戻る</button>'+
+    '</div>'+
+    '<p class="printline"><a href="#" id="gprint">このページを印刷する・PDFで保存する</a></p>'+
+  '</main>';
+  requestAnimationFrame(function(){var rv=el('rv');if(rv)rv.classList.add('on')});
+
+  var all=function(sel){return Array.prototype.slice.call(document.querySelectorAll(sel))};
+  var showErr=function(msg){var e=el('gerr');e.textContent=msg;e.classList.add('on');e.scrollIntoView({block:'center'})};
+  el('g_rel').addEventListener('change',function(){el('g_relOtherBox').style.display=this.value==='その他'?'':'none'});
+  el('g_noshoot').addEventListener('change',function(){
+    var off=this.checked;
+    all('.g_photo,.g_video').forEach(function(x){x.disabled=off;if(off)x.checked=false});
+    el('g_photoSet').classList.toggle('off',off);el('g_videoSet').classList.toggle('off',off);
+  });
+  el('gprint').addEventListener('click',function(ev){ev.preventDefault();window.print()});
+  var pickUses=function(cls){var o={};all('.'+cls).forEach(function(x){o[x.dataset.k]=!!x.checked});return o};
+  var lockAll=function(on){['gsubmit','gdecline','gdeclineGo','gdeclineCancel'].forEach(function(id){var b=el(id);if(b)b.disabled=on})};
+  async function send(payload,doneTitle,doneLines,doneSub){
+    el('gerr').classList.remove('on');lockAll(true);
+    try{
+      var r=await apiPost('submitGuardianConsentPublic',Object.assign(linkFields(),{documentHash:ctx.documentHash},payload));
+      if(r&&r.ok===false&&r.progress&&r.progress.title){showProgress(r.progress);return}
+      if(r&&r.ok===false){var er=new Error(r.error||'送信できませんでした');er.reload=!!r.reload;throw er}
+      renderState('ok',doneTitle,doneLines,doneSub);
+      window.scrollTo(0,0);
+    }catch(ex){
+      if(await recheckProgress())return;
+      lockAll(false);showErr(String(ex&&ex.message||ex));if(ex&&ex.reload)addReloadUnder(el('gerr'));
+    }
+  }
+  el('gsubmit').addEventListener('click',function(){
+    var name=el('g_name').value.trim(),rel=el('g_rel').value,relOther=el('g_relOther').value.trim(),phone=toHalfTel(el('g_phone').value);el('g_phone').value=phone;
+    var miss=[],its={};
+    if(!name)miss.push('保護者氏名');
+    if(!rel)miss.push('ご本人との続柄');else if(rel==='その他'&&!relOther)miss.push('続柄（その他の内容）');
+    if(ctx.phoneRequired&&!phone)miss.push('緊急時の連絡先の電話番号');
+    if(!el('g_declared').checked)miss.push('保護者として回答していることの確認');
+    all('.g_item').forEach(function(x){its[x.dataset.k]=!!x.checked;if(x.dataset.req==='1'&&!x.checked)miss.push(x.dataset.l)});
+    if(miss.length){showErr('次の項目をご確認ください: '+miss.join('・'));return}
+    send({decision:'agree',agree:true,guardianName:name,relationship:rel,relationshipOther:relOther,phone:phone,declared:true,items:its,
+          photo:pickUses('g_photo'),video:pickUses('g_video'),noShooting:el('g_noshoot').checked,note:el('g_note').value.trim()},
+      'ご回答ありがとうございました',
+      ['同意を受け付けました。','登録の手続きは自動で進み、完了のご連絡をご本人にお送りします。','ご回答の控えを、保護者の方のメールアドレスにお送りします（数分かかることがあります）。'],
+      'ご回答の変更や取り消しは、admin@connectahubapp.com へご連絡ください。');
+  });
+  el('gdecline').addEventListener('click',function(){el('gerr').classList.remove('on');el('gdeclineBox').hidden=false;el('gdeclineBox').scrollIntoView({block:'center'})});
+  el('gdeclineCancel').addEventListener('click',function(){el('gdeclineBox').hidden=true});
+  el('gdeclineGo').addEventListener('click',function(){
+    send({decision:'decline',agree:false,guardianName:el('g_name').value.trim(),declineNote:el('g_dnote').value.trim()},
+      'ご回答ありがとうございました',
+      ['今回は同意されない旨を承りました。','登録の手続きは進めません。団体からご本人へ、その後の手続きについてご連絡します。'],
+      'ご質問がありましたら、admin@connectahubapp.com へご連絡ください。');
+  });
+}
+
 /* ============ 起動 ============ */
 (async function(){
   if(!LINK.appId||!LINK.purpose||!LINK.exp||!LINK.sig){
@@ -385,7 +605,7 @@ function renderGuardian(ctx){
         '学生団体connec+a（コネクタ）');
       return;
     }
-    if(LINK.purpose==='guardian_consent')renderGuardian(ctx);
+    if(LINK.purpose==='guardian_consent'){if(ctx.consentVersion==='guardian_consent_v2')renderGuardianV2(ctx);else renderGuardian(ctx)}   // 改訂前の対象者には v1 の画面のまま
     else if(LINK.purpose==='direct_entry')renderEntry(ctx);
     else renderState('ng','このリンクは現在ご利用いただけません',['お手数ですが、メールに記載の最新のリンクをお開きください。']);
   }catch(ex){
